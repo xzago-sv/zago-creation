@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Ulang Tahun</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            /* Background gradasi pastel ceria */
+            background: linear-gradient(135deg, #fbcfe8 0%, #fef08a 50%, #bfdbfe 100%);
+            background-attachment: fixed;
+            color: #334155;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .polaroid {
+            /* Bingkai polaroid dengan nuansa pastel dan border putih */
+            background: linear-gradient(to bottom right, #fff1f2, #fefce8, #f0f9ff);
+            padding: 1rem 1rem 2rem 1rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            border: 6px solid white;
+            transform: rotate(-2deg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.2);
+        }
+        .image-placeholder {
+            background: linear-gradient(45deg, #e2e8f0, #cbd5e1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-weight: bold;
+            text-align: center;
+        }
+        /* Styling teks cerita agar lebih meriah */
+        .story-text-highlight {
+            color: #9d174d; /* Pink gelap / Magenta untuk teks */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        
+        /* Tambahan untuk Gallery Background 100 Foto */
+        #bg-gallery {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; /* Berada di paling belakang */
+            display: grid;
+            /* Membagi layar menjadi 10 kolom (desktop) atau 5 kolom (mobile) */
+            grid-template-columns: repeat(5, 1fr); 
+            grid-auto-rows: 20vh;
+            opacity: 0.15; /* Opacity sangat kecil sesuai instruksi */
+            pointer-events: none; /* Agar tidak bisa di-klik dan tidak mengganggu game */
+            overflow: hidden;
+            mix-blend-mode: multiply; /* Kunci mempertahankan nuansa pastel */
+        }
+        @media (min-width: 768px) {
+            #bg-gallery {
+                grid-template-columns: repeat(10, 1fr);
+                grid-auto-rows: 10vh;
+            }
+        }
+        .bg-img-item {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative z-0">
+
+    <!-- Container untuk 100 Foto Background -->
+    <div id="bg-gallery"></div>
+
+    <div id="game-container" class="max-w-md w-full mx-auto relative z-10">
+        <!-- Main Game Card -->
+        <div class="polaroid mb-8 relative">
+            <!-- Ornamen Dekoratif Sederhana -->
+            <div class="absolute -top-4 -right-4 text-4xl transform rotate-12">✨</div>
+            <div class="absolute -bottom-4 -left-4 text-4xl transform -rotate-12">🎉</div>
+            
+            <!-- Image Area -->
+            <div id="image-container" class="w-full aspect-square mb-6 rounded-lg overflow-hidden relative shadow-inner border-2 border-pink-100">
+                <img id="scene-image" src="" alt="Scene Image" class="w-full h-full object-cover hidden">
+                <div id="placeholder-text" class="absolute inset-0 image-placeholder text-sm px-4">
+                    Memuat foto...
+                </div>
+            </div>
+            
+            <!-- Story Text Area -->
+            <div class="px-2">
+                <p id="scene-text" class="story-text-highlight text-xl leading-relaxed text-center font-bold min-h-[100px] flex items-center justify-center">
+                    Teks cerita akan muncul di sini.
+                </p>
+            </div>
+        </div>
+
+        <!-- Choices Area -->
+        <div id="choices-container" class="flex flex-col space-y-4">
+            <!-- Buttons will be injected here by JS -->
+        </div>
+    </div>
+
+    <script>
+        /**
+         * AREA KONFIGURASI BACKGROUND FOTO (BERTahap HINGGA 100)
+         * -------------------------------------------------------------------
+         * Masukkan link foto-foto background di array ini. 
+         * Anda bisa menambahkannya bertahap (1, 5, 20, atau 100 sekaligus).
+         * Sistem akan otomatis mengulangnya jika jumlahnya kurang dari 100.
+         */
+        const backgroundPhotos = [
+            "BG_FOTO_1.jpg",
+            "BG_FOTO_2.jpg",
+            // Pisahkan dengan koma jika Anda menambah foto baru:
+            // "BG_FOTO_3.jpg",
+            // "BG_FOTO_4.jpg"
+        ];
+
+        /**
+         * AREA KONFIGURASI CERITA & FOTO
+         * -------------------------------------------------------------------
+         * Instruksi Pengisian:
+         * 1. Ganti nilai "photo" dengan URL foto Anda (misal: "foto1.jpg" jika ditaruh di folder yang sama, atau link Google Drive yang sudah di-generate menjadi direct link).
+         * 2. Ganti nilai "text" dengan narasi cerita pada foto tersebut.
+         * 3. Sesuaikan "choices". Anda bisa mengatur properti 'next' untuk melompat ke ID cerita manapun.
+         */
+        const storyData = [
+            {
+                id: 1,
+                photo: "MASUKKAN_FOTO_1_BERDUA.jpg",
+                text: "Selamat ulang tahun sayang! Aku bikin galeri memori mini buat kita. Coba lihat foto pertama ini, kamu ingat momen ini nggak? Suka sama fotonya?",
+                choices: [
+                    { text: "Suka banget!", next: 2 },
+                    { text: "Biasa aja ih", next: 3 }
+                ]
+            },
+            {
+                id: 2,
+                photo: "MASUKKAN_FOTO_2_BERDUA.jpg",
+                text: "Tuh kan, emang foto ini bagus. Kalau yang ini gimana? Pas kita lagi jalan-jalan. Kamu kelihatan cakep di sini. Suka?",
+                choices: [
+                    { text: "Iya, aku suka!", next: 4 },
+                    { text: "Hmm, jelek ah", next: 5 }
+                ]
+            },
+            {
+                id: 3,
+                photo: "MASUKKAN_FOTO_3_DIA_SENDIRI.jpg",
+                text: "Biasa aja? Yaudah coba lihat foto kamu yang ini. Aku ngambilnya diem-diem. Kamu suka nggak hasil jepretanku?",
+                choices: [
+                    { text: "Wah, bagus! Suka!", next: 4 },
+                    { text: "Hapus nggak?! Jelek!", next: 6 }
+                ]
+            },
+            {
+                id: 4,
+                photo: "MASUKKAN_FOTO_4_BERDUA.jpg",
+                text: "Kalo foto berdua yang ini? Ini salah satu favoritku sih. Kamu setuju nggak kalau kita kelihatan cocok banget di sini?",
+                choices: [
+                    { text: "Setuju 100%", next: 7 },
+                    { text: "Rambut/mukaku aneh di situ", next: 8 }
+                ]
+            },
+            {
+                id: 5,
+                photo: "MASUKKAN_FOTO_5_AIB_KONYOL.jpg",
+                text: "Jelek? Oke, mari kita lihat foto yang LEBIH 'estetik'. Coba lihat muka kamu di foto ini. Masih mau bilang foto sebelumnya jelek?",
+                choices: [
+                    { text: "Hahaha ampun, iya yang tadi mendingan", next: 4 },
+                    { text: "Tetep aja dua-duanya jelek!", next: 6 }
+                ]
+            },
+            {
+                id: 6,
+                photo: "MASUKKAN_FOTO_6_DIA_SENDIRI.jpg",
+                text: "Nggak akan aku hapus! Wle. Nah kalau foto ini, masa kamu nggak suka juga? Ini kan pas kamu lagi dandan/rapi banget.",
+                choices: [
+                    { text: "Oke, yang ini aku suka", next: 7 },
+                    { text: "Gak suka gayanya", next: 9 }
+                ]
+            },
+            {
+                id: 7,
+                photo: "MASUKKAN_FOTO_7_BERDUA.jpg",
+                text: "Nah, lanjut! Foto kita berdua lagi. Ini pas kita lagi makan/jalan. Kamu kangen nggak sih hari itu? Suka sama fotonya?",
+                choices: [
+                    { text: "Kangen! Fotonya juga gemes", next: 10 },
+                    { text: "Fokus ke makanannya/suasananya, fotonya B aja", next: 11 }
+                ]
+            },
+            {
+                id: 8,
+                photo: "MASUKKAN_FOTO_8_DIA_SENDIRI.jpg",
+                text: "Aneh apanya, cakep gitu. Coba lihat yang ini, rambut atau gaya kamu bagus nih di sini. Suka kan?",
+                choices: [
+                    { text: "Iya deh, lumayan", next: 10 },
+                    { text: "Tetep kurang ah", next: 9 }
+                ]
+            },
+            {
+                id: 9,
+                photo: "MASUKKAN_FOTO_9_AIB_BERDUA.jpg",
+                text: "Kamu tuh emang susah dipuasin ya soal foto! Coba lihat foto aib kita berdua ini. Suka nggak? (Awas kalau bilang nggak!)",
+                choices: [
+                    { text: "Hahaha, iya ini lucu, aku suka", next: 10 },
+                    { text: "Gak! Hapus!", next: 12 }
+                ]
+            },
+            {
+                id: 10,
+                photo: "MASUKKAN_FOTO_10_BERDUA.jpg",
+                text: "Yay! Oke, mari kita lihat foto yang agak sweet. Coba lihat kita di sini. Suka nggak nuansanya?",
+                choices: [
+                    { text: "Suka, sweet banget", next: 13 },
+                    { text: "Geli ah lihatnya", next: 14 }
+                ]
+            },
+            {
+                id: 11,
+                photo: "MASUKKAN_FOTO_11_DIA_SENDIRI_CANDID.jpg",
+                text: "Dasar. Kalau foto kamu pas lagi fokus ngapain gitu, aku suka banget lihatnya. Kamu suka foto candid ini?",
+                choices: [
+                    { text: "Wah, ternyata bagus. Suka!", next: 13 },
+                    { text: "Kelihatan tembem/jelek ih", next: 12 }
+                ]
+            },
+            {
+                id: 12,
+                photo: "MASUKKAN_FOTO_12_BERDUA.jpg",
+                text: "Yee, yang penting momennya. Coba lihat foto kita pas lagi capek tapi happy ini. Pasti kamu suka kan?",
+                choices: [
+                    { text: "Iya, suka banget nginget hari itu", next: 13 },
+                    { text: "Muka kita kucel banget", next: 15 }
+                ]
+            },
+            {
+                id: 13,
+                photo: "MASUKKAN_FOTO_13_DIA_SENDIRI.jpg",
+                text: "Mantap! Lanjut ke foto kamu yang paling sering aku pandangin kalau lagi kangen. Kamu sendiri suka nggak sama foto ini?",
+                choices: [
+                    { text: "Aww, iya aku suka", next: 16 },
+                    { text: "Maluuu, biasa aja padahal", next: 17 }
+                ]
+            },
+            {
+                id: 14,
+                photo: "MASUKKAN_FOTO_14_KONYOL.jpg",
+                text: "Geli ya? Yaudah ini ada foto derp kamu. Lebih suka yang ini daripada yang sweet?",
+                choices: [
+                    { text: "Hahaha iya mending ini lucu", next: 16 },
+                    { text: "Sama-sama bikin geli", next: 15 }
+                ]
+            },
+            {
+                id: 15,
+                photo: "MASUKKAN_FOTO_15_BERDUA.jpg",
+                text: "Kucel/Geli apanya, natural itu namanya! Coba lihat foto natural kita yang ini. Suka nggak?",
+                choices: [
+                    { text: "Iya deh, yang ini mendingan, suka", next: 16 },
+                    { text: "Nggak suka juga", next: 18 }
+                ]
+            },
+            {
+                id: 16,
+                photo: "MASUKKAN_FOTO_16_BERDUA.jpg",
+                text: "Hampir selesai nih galerinya. Ini foto berdua kita yang menurutku paling dapet banget chemistry-nya. Kamu paling suka foto ini kan?",
+                choices: [
+                    { text: "Iya dong, the best!", next: 19 },
+                    { text: "Ada foto lain yang lebih bagus sih", next: 19 }
+                ]
+            },
+            {
+                id: 17,
+                photo: "MASUKKAN_FOTO_17_DIA_SENDIRI.jpg",
+                text: "Nggak usah malu, emang cakep kok! Coba lihat satu lagi foto candid kamu ini. Gimana, suka?",
+                choices: [
+                    { text: "Oke deh, aku suka", next: 19 },
+                    { text: "Nggak, aku jelek di situ", next: 18 }
+                ]
+            },
+            {
+                id: 18,
+                photo: "MASUKKAN_FOTO_18_AIB_KITA.jpg",
+                text: "Kamu dari tadi banyak nggak sukanya ya! Ini foto terakhir buat hukuman. Aib kita berdua! Suka nggak suka harus terima!",
+                choices: [
+                    { text: "Hahaha ampun, iya suka!", next: 19 },
+                    { text: "Tidaaaak!", next: 19 }
+                ]
+            },
+            {
+                id: 19,
+                photo: "MASUKKAN_FOTO_19_BERDUA_FAVORIT_BANGET.jpg",
+                text: "Akhirnya sampai di foto favorit utamaku. Semua perjalanan dan kenangan kita ada di sini. Suka banget kan sama foto ini?",
+                choices: [
+                    { text: "Suka bangeeet!", next: 20 },
+                    { text: "Sayang kamu!", next: 20 }
+                ]
+            },
+            {
+                id: 20,
+                photo: "MASUKKAN_FOTO_20_KADO.jpg",
+                text: "Happy Birthday Sayang! Makasih udah nemenin bikin banyak momen bagus. Siap nerima kado aslinya?",
+                choices: [
+                    { text: "Siap dong! Mana kadonya?", next: 1 },
+                    { text: "Lihat foto-fotonya lagi ah", next: 1 }
+                ]
+            }
+        ];
+
+        // LOGIKA GAME
+        const imageEl = document.getElementById('scene-image');
+        const placeholderText = document.getElementById('placeholder-text');
+        const textEl = document.getElementById('scene-text');
+        const choicesContainer = document.getElementById('choices-container');
+
+        // Fungsi untuk merender tampilan berdasarkan ID cerita
+        function renderScene(sceneId) {
+            const scene = storyData.find(s => s.id === sceneId);
+            if (!scene) {
+                console.error("Scene tidak ditemukan:", sceneId);
+                return;
+            }
+
+            // Update Teks
+            textEl.innerText = scene.text;
+
+            // Handle Foto
+            imageEl.classList.add('hidden');
+            placeholderText.classList.remove('hidden');
+            placeholderText.innerText = `Menunggu foto:\n${scene.photo}`; // Menampilkan nama placeholder
+            
+            // Coba muat foto, jika error (karena placeholder) biarkan teks placeholder tampil
+            const imgLoad = new Image();
+            imgLoad.onload = function() {
+                imageEl.src = scene.photo;
+                imageEl.classList.remove('hidden');
+                placeholderText.classList.add('hidden');
+            };
+            imgLoad.src = scene.photo;
+
+            // Render Tombol Pilihan
+            choicesContainer.innerHTML = '';
+            scene.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                // Tombol diubah menjadi gaya pastel membulat (pill) dengan animasi hover
+                btn.className = "w-full bg-gradient-to-r from-pink-300 via-yellow-200 to-blue-300 hover:from-pink-400 hover:via-yellow-300 hover:to-blue-400 text-slate-800 font-bold py-4 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 active:scale-95 text-center border-2 border-white hover:border-pink-200";
+                btn.innerText = choice.text;
+                btn.onclick = () => renderScene(choice.next);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Fungsi untuk merender 100 foto background secara dinamis
+        function renderBackgroundGallery() {
+            const bgContainer = document.getElementById('bg-gallery');
+            const totalGridSlots = 100; // Alokasi 100 kotak
+            
+            // Cek jika pengguna belum mengganti placeholder bawaan kode
+            const isEmptyOrPlaceholder = backgroundPhotos.length === 0 || backgroundPhotos[0] === "BG_FOTO_1.jpg";
+
+            for (let i = 0; i < totalGridSlots; i++) {
+                if (isEmptyOrPlaceholder) {
+                    // Tampilkan kotak abu-abu jika belum ada foto
+                    const placeholderDiv = document.createElement('div');
+                    placeholderDiv.className = 'bg-img-item bg-slate-400/30 border border-slate-500/10';
+                    bgContainer.appendChild(placeholderDiv);
+                } else {
+                    // Loop foto yang ada di array berulang kali hingga memenuhi 100 slot
+                    const imgIndex = i % backgroundPhotos.length;
+                    const imgEl = document.createElement('img');
+                    imgEl.src = backgroundPhotos[imgIndex];
+                    imgEl.className = 'bg-img-item';
+                    imgEl.loading = 'lazy'; // MENCEGAH BROWSER CRASH SAAT LOAD 100 FOTO
+                    bgContainer.appendChild(imgEl);
+                }
+            }
+        }
+
+        // Mulai game pada ID 1
+        window.onload = () => {
+            renderBackgroundGallery(); // Render background dulu
+            renderScene(1);            // Render game utama
+        };
+    </script>
+</body>
+</html>
