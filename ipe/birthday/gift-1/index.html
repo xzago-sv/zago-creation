@@ -12,7 +12,7 @@
             color: #334155;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
-            overflow-y: hidden; /* Mencegah scroll bocor karena background */
+            overflow-y: hidden; 
         }
         .polaroid {
             background: linear-gradient(to bottom right, #fff1f2, #fefce8, #f0f9ff);
@@ -52,11 +52,10 @@
         .bg-img-item {
             position: absolute;
             object-fit: cover;
-            border-radius: 0.3rem;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
             background-color: white;
-            border: 4px solid #ffffff;
-            /* Transisi transform dihilangkan dari CSS untuk menghindari konflik dengan injeksi Javascript berpusat ganda */
+            border: 6px solid #ffffff;
         }
     </style>
 </head>
@@ -74,15 +73,15 @@
             <div id="image-container" class="w-full aspect-square mb-6 rounded-lg overflow-hidden relative shadow-inner border-2 border-pink-100 bg-white">
                 <img id="scene-image" src="" alt="Scene Image" class="w-full h-full object-cover hidden">
                 <div id="placeholder-text" class="absolute inset-0 image-placeholder text-sm px-6 flex flex-col gap-2">
-                    <span class="text-3xl">📷</span>
-                    <span id="placeholder-filename">Belum ada foto utama...</span>
-                    <span class="text-xs font-normal opacity-60">(Sedang memuat foto...)</span>
+                    <span class="text-3xl" id="placeholder-icon">📷</span>
+                    <span id="placeholder-filename">Memuat foto...</span>
+                    <span id="placeholder-hint" class="text-xs font-normal opacity-80">(Mencoba variasi format file...)</span>
                 </div>
             </div>
             
             <div class="px-2">
                 <p id="scene-text" class="story-text-highlight text-lg leading-relaxed text-center font-bold min-h-[80px] flex items-center justify-center">
-                    Menunggu cerita Anda...
+                    Menyiapkan memori...
                 </p>
             </div>
         </div>
@@ -95,7 +94,6 @@
     <script>
         /**
          * 77 FOTO UNIK DARI HASIL UNGGAHAN
-         * Dirender dinamis menutupi keseluruhan layar.
          */
         const backgroundPhotos = [
             "IMG_2671.jpg", "IMG_2692.jpg", "IMG_2707.jpg", "IMG_2708.jpg", "IMG_3941.jpg", 
@@ -127,16 +125,8 @@
             "IMG_4982.jpg", "IMG_5007.jpg"
         ];
 
-        /**
-         * 20 FOTO UTAMA UNTUK CERITA 
-         * Menggunakan 20 file valid untuk mencegah error
-         */
         const mainPhotos = backgroundPhotos.slice(0, 20);
 
-        /**
-         * STRUKTUR LINIER (SATU JALAN CERITA)
-         * Tombol direduksi menjadi satu dengan variasi teks
-         */
         const storyData = [
             { id: 1, photo: mainPhotos[0], text: "Selamat ulang tahun sayang! Aku bikin galeri memori mini buat kita. Coba lihat foto pertama ini, senyum kamu manis banget.", choices: [{ text: "Lanjut dong!", next: 2 }] },
             { id: 2, photo: mainPhotos[1], text: "Tuh kan, emang foto ini bagus. Kalau yang ini gimana? Pas kamu lagi jalan-jalan. Kamu kelihatan cakep di sini.", choices: [{ text: "Apalagi nih?", next: 3 }] },
@@ -163,8 +153,24 @@
         const imageEl = document.getElementById('scene-image');
         const placeholderText = document.getElementById('placeholder-text');
         const filenameEl = document.getElementById('placeholder-filename');
+        const hintEl = document.getElementById('placeholder-hint');
+        const iconEl = document.getElementById('placeholder-icon');
         const textEl = document.getElementById('scene-text');
         const choicesContainer = document.getElementById('choices-container');
+
+        // Fungsi Auto-Fallback untuk menetralisir Case Sensitivity ekstensi file (Solusi Kritik #2)
+        function generateFallbacks(filename) {
+            if (!filename) return [];
+            const base = filename.substring(0, filename.lastIndexOf('.'));
+            return [
+                filename, 
+                base + '.JPG', 
+                base + '.jpeg', 
+                base + '.JPEG', 
+                base + '.png',
+                base + '.PNG'
+            ];
+        }
 
         function renderScene(sceneId) {
             const scene = storyData.find(s => s.id === sceneId);
@@ -172,23 +178,45 @@
 
             textEl.innerText = scene.text;
             imageEl.classList.add('hidden');
-            
+            placeholderText.classList.remove('hidden');
+            iconEl.innerText = "⏳";
+            filenameEl.innerText = "Memuat: " + scene.photo;
+            hintEl.innerText = "Mencari file di perangkat Anda...";
+            hintEl.className = "text-xs font-normal opacity-80 text-blue-600";
+
             if (!scene.photo) {
-                placeholderText.classList.remove('hidden');
-                filenameEl.innerText = "Belum ada foto yang di-upload";
+                iconEl.innerText = "⚠️";
+                filenameEl.innerText = "Tidak ada referensi foto";
+                hintEl.innerText = "";
             } else {
-                placeholderText.classList.remove('hidden');
-                filenameEl.innerText = "Memuat: " + scene.photo;
-                const imgLoad = new Image();
-                imgLoad.onload = function() {
-                    imageEl.src = scene.photo;
-                    imageEl.classList.remove('hidden');
-                    placeholderText.classList.add('hidden');
-                };
-                imgLoad.onerror = function() {
-                    filenameEl.innerText = "Error memuat: " + scene.photo;
-                };
-                imgLoad.src = scene.photo;
+                const fallbacks = generateFallbacks(scene.photo);
+                // Hapus duplikat dari array fallbacks
+                const uniqueFallbacks = [...new Set(fallbacks)];
+                let attemptIndex = 0;
+
+                function attemptLoad() {
+                    if (attemptIndex >= uniqueFallbacks.length) {
+                        iconEl.innerText = "❌";
+                        filenameEl.innerText = `Error: ${scene.photo} tidak ditemukan.`;
+                        hintEl.innerText = "Pastikan file fisik foto berada di TEPAT folder yang sama dengan file HTML ini.";
+                        hintEl.className = "text-xs font-bold text-red-600 mt-2 bg-red-100 p-2 rounded";
+                        return;
+                    }
+
+                    const imgLoad = new Image();
+                    imgLoad.onload = function() {
+                        imageEl.src = uniqueFallbacks[attemptIndex];
+                        imageEl.classList.remove('hidden');
+                        placeholderText.classList.add('hidden');
+                    };
+                    imgLoad.onerror = function() {
+                        attemptIndex++;
+                        attemptLoad(); // Coba ekstensi berikutnya
+                    };
+                    imgLoad.src = uniqueFallbacks[attemptIndex];
+                }
+                
+                attemptLoad();
             }
 
             choicesContainer.innerHTML = '';
@@ -202,10 +230,9 @@
         }
 
         /**
-         * PERBAIKAN LOGIKA GRID DINAMIS (ANCHOR POINT FIX)
-         * - Menyelesaikan masalah penumpukan di sudut kanan bawah.
-         * - Menambahkan translate(-50%, -50%) agar poros gambar berada tepat di titik sumbu XY.
-         * - Membesarkan skala gambar secara masif agar layar 100% tertutup.
+         * PERBAIKAN GRID LATAR BELAKANG (Solusi Kritik #1)
+         * - Scale BaseLeft dan BaseTop dilebarkan drastis menjadi rentang -15% hingga 115% agar tidak ada celah di tepian.
+         * - Ukuran gambar di-set masif (350px - 750px) agar area benar-benar tumpang tindih padat.
          */
         function renderBackgroundGallery() {
             const bgContainer = document.getElementById('bg-gallery');
@@ -214,45 +241,63 @@
             const totalPhotos = backgroundPhotos.length;
             if(totalPhotos === 0) return;
 
+            // Memaksa grid menjadi lebih padat dan luas
             const columns = Math.ceil(Math.sqrt(totalPhotos)); 
             const rows = Math.ceil(totalPhotos / columns);   
 
             for (let i = 0; i < totalPhotos; i++) {
                 let imgEl = document.createElement('img');
                 
-                imgEl.src = backgroundPhotos[i];
+                const originalSrc = backgroundPhotos[i];
+                const fallbacks = generateFallbacks(originalSrc);
+                const uniqueFallbacks = [...new Set(fallbacks)];
+                let attemptIndex = 0;
+
+                // Logika fallback khusus untuk background (tanpa UI teks)
+                function attemptBgLoad() {
+                    if (attemptIndex >= uniqueFallbacks.length) {
+                        imgEl.style.backgroundColor = '#f1f5f9';
+                        imgEl.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; 
+                        return;
+                    }
+                    imgEl.src = uniqueFallbacks[attemptIndex];
+                }
+
+                imgEl.onerror = function() {
+                    attemptIndex++;
+                    attemptBgLoad();
+                };
+                
+                attemptBgLoad();
+
                 imgEl.className = 'bg-img-item';
                 imgEl.loading = 'lazy';
-                
-                imgEl.onerror = function() {
-                    this.style.backgroundColor = '#ffffff';
-                    this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; 
-                };
 
                 const col = i % columns;
                 const row = Math.floor(i / columns);
                 
-                // Kalkulasi sebaran grid dipastikan merentang tepat 0 hingga 100% dari tepi ke tepi
-                const baseLeft = (col / Math.max(1, columns - 1)) * 100;
-                const baseTop = (row / Math.max(1, rows - 1)) * 100;
+                // EKSPANSI GRID: Lebarkan rasio penyebaran agar area kosong tertutup sepenuhnya (Bleding Edge -15% to 115%)
+                const startRatio = -15;
+                const endRatio = 115;
+                const range = endRatio - startRatio;
                 
-                const jitterX = (Math.random() * 16) - 8; 
-                const jitterY = (Math.random() * 16) - 8; 
+                const baseLeft = startRatio + (col / Math.max(1, columns - 1)) * range;
+                const baseTop = startRatio + (row / Math.max(1, rows - 1)) * range;
                 
-                // SKALA BESAR: Resolusi gambar disetel jauh lebih dominan agar tertutup sempurna
-                const size = Math.floor(Math.random() * (550 - 250 + 1)) + 250; 
-                const rotation = Math.floor(Math.random() * 60) - 30; 
+                // Variasi posisi acak
+                const jitterX = (Math.random() * 20) - 10; 
+                const jitterY = (Math.random() * 20) - 10; 
+                
+                // DIMENSI RAKSASA: Memastikan tidak ada sela-sela putih
+                const size = Math.floor(Math.random() * (750 - 350 + 1)) + 350; 
+                const rotation = Math.floor(Math.random() * 80) - 40; 
 
                 imgEl.style.width = `${size}px`;
                 imgEl.style.height = `${size}px`;
                 
-                // Posisi dasar CSS
                 imgEl.style.left = `${baseLeft + jitterX}%`;
                 imgEl.style.top = `${baseTop + jitterY}%`;
-                
-                // KOREKSI KRITIKAL: Pusatkan titik jangkar gambar (anchor point) ke koordinat, agar tidak meluncur keluar layar.
                 imgEl.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
-                
                 imgEl.style.zIndex = 1;
 
                 bgContainer.appendChild(imgEl);
