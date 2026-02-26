@@ -44,7 +44,8 @@
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: 1; 
-            opacity: 0.4;
+            /* Opasitas disesuaikan agar 77 foto tidak menutupi visibilitas konten utama */
+            opacity: 0.35;
             pointer-events: none;
             overflow: hidden;
         }
@@ -93,11 +94,10 @@
 
     <script>
         /**
-         * TOTAL 60 FOTO UNTUK BACKGROUND YANG KAYA
-         * (Gabungan dari semua foto yang diunggah)
+         * 77 FOTO UNIK DARI HASIL UNGGAHAN
+         * Dirender dinamis menutupi keseluruhan layar.
          */
         const backgroundPhotos = [
-            // Batch 1 (Originals & New additions)
             "IMG_2671.jpg", "IMG_2692.jpg", "IMG_2707.jpg", "IMG_2708.jpg", "IMG_3941.jpg", 
             "IMG_3949.jpg", "IMG_3950.jpg", "IMG_4270.jpg", "IMG_4271.jpg", "IMG_4279.jpg", 
             "IMG_5158.jpg", "IMG_5160.jpg", "IMG_5751.jpg", "IMG_5753.jpg", "IMG_5767.jpg", 
@@ -107,15 +107,6 @@
             "IMG_7400.jpg", "IMG_7466.jpg", "IMG_7468.jpg", "IMG_7469.jpg", "IMG_7488.jpg", 
             "IMG_7491.jpg", "IMG_7507.jpg", "0a1b98d0-88e8-4a2c-80c8-cd1af2f6f81b.jpg", 
             "0b30e914-5a47-4632-b338-cd41c3f3b7d1.jpg", "0e63f929-68b2-4f26-9ae8-64d408703bd6.jpg",
-            // Batch 2 (New Uploads)
-            "24f7e3a1-new-main-01.jpg", "35g8f4b2-new-main-02.jpg", "46h9g5c3-new-main-03.jpg",
-            "57i0h6d4-new-main-04.jpg", "68j1i7e5-new-main-05.jpg", "79k2j8f6-new-main-06.jpg",
-            "80l3k9g7-new-main-07.jpg", "91m4l0h8-new-main-08.jpg", "a2n5m1i9-new-main-09.jpg",
-            "b3o6n2j0-new-main-10.jpg", "c4p7o3k1-new-main-11.jpg", "d5q8p4l2-new-main-12.jpg",
-            "e6r9q5m3-new-main-13.jpg", "f7s0r6n4-new-main-14.jpg", "g8t1s7o5-new-main-15.jpg",
-            "h9u2t8p6-new-main-16.jpg", "i0v3u9q7-new-main-17.jpg", "j1w4v0r8-new-main-18.jpg",
-            "k2x5w1s9-new-main-19.jpg", "l3y6x2t0-new-main-20.jpg",
-            // Batch 3 (Additional Uploads)
             "1c51c290-0d06-4827-a3e6-0b8edb37ab40.jpg", "1d0f032b-b1f7-48bc-972f-22d178ac85a2.jpg",
             "1e809e68-ec69-4091-913b-e805342342c1.jpg", "2c504ced-b605-4d62-93b2-b7482127b181.jpg",
             "2d3905a6-37d3-4bf2-a7a2-073eed7ca9dd.jpg", "5c514040-fdf5-421a-80b5-363b6fae652a.jpg",
@@ -131,7 +122,6 @@
             "b8a83a04-a7ee-4af5-b5e3-4b269ec3d0ca.jpg", "b25942ab-7cc0-4237-84cf-378397589d94.jpg",
             "C2C23ED4-80E4-409E-8E91-64521BC476BE.jpg", "d0c19ff2-27fb-4da4-9ed7-1dc7d32c1c1a.jpg",
             "e3581d96-0785-485f-8c09-07c2df631438.jpg", "e34723c9-fb66-4041-96f8-707e22dba9ab.jpg",
-            // Batch 4 (Final Additions)
             "IMG_5285.jpg", "eb4c7d69-6d10-4cdb-8fb7-59c82149ebd5.jpg", "f4d16661-005f-42ab-b8f7-af5dfc77c5d1.jpg", 
             "F82808F8-4E25-4F2A-9651-F7FD53C02032.jpg", "fcb35894-ba72-45f6-8909-5a6edd2a8f1a.jpg", 
             "IMG_4982.jpg", "IMG_5007.jpg"
@@ -139,51 +129,34 @@
 
         /**
          * 20 FOTO UTAMA UNTUK CERITA 
-         * (Dipilih 20 terbaik dari total 60 foto untuk alur cerita)
+         * Menggunakan 20 file valid untuk mencegah error
          */
-        const mainPhotos = [
-            "IMG_NEW_01.jpg",                           // 1. Senyum manis (Foto baru)
-            "IMG_6316.jpg",                             // 2. Tas/Jalan-jalan
-            "IMG_NEW_02.jpg",                           // 3. Rebahan natural (Foto baru)
-            "IMG_3950.jpg",                             // 4. Nuansa hijau (pashmina/alam)
-            "0a1b98d0-88e8-4a2c-80c8-cd1af2f6f81b.jpg", // 5. Hoodie ungu konyol
-            "IMG_NEW_03.jpg",                           // 6. Manis senyum hijab coklat (Foto baru)
-            "IMG_2707.jpg",                             // 7. Jajan bareng di kafe
-            "IMG_5799.jpg",                             // 8. Bareng kucing!
-            "IMG_5753.jpg",                             // 9. Gaya jari konyol
-            "0b30e914-5a47-4632-b338-cd41c3f3b7d1.jpg", // 10. Meluk boneka gede
-            "IMG_NEW_04.jpg",                           // 11. Fokus candid (Foto baru)
-            "IMG_6284.jpg",                             // 12. Capek tapi happy (di motor)
-            "IMG_4279.jpg",                             // 13. Sering dipandangin (kondangan)
-            "IMG_NEW_05.jpg",                           // 14. Foto derp / lucu (Foto baru)
-            "IMG_7332.jpg",                             // 15. Natural (di zoo)
-            "IMG_4270.jpg",                             // 16. Chemistry dapet (kondangan senyum)
-            "IMG_NEW_06.jpg",                           // 17. Candid manis (Foto baru)
-            "IMG_5775.jpg",                             // 18. Aib berdua (close up)
-            "IMG_NEW_07.jpg",                           // 19. Favorit utama (Foto baru)
-            "IMG_NEW_08.jpg"                            // 20. Ending (Foto baru)
-        ];
+        const mainPhotos = backgroundPhotos.slice(0, 20);
 
+        /**
+         * STRUKTUR LINIER (SATU JALAN CERITA)
+         * Tombol direduksi menjadi satu dengan variasi teks
+         */
         const storyData = [
-            { id: 1, photo: mainPhotos[0], text: "Selamat ulang tahun sayang! Aku bikin galeri memori mini buat kita. Coba lihat foto pertama ini, senyum kamu manis banget. Suka sama fotonya?", choices: [{ text: "Suka banget!", next: 2 }, { text: "Biasa aja ih", next: 3 }] },
-            { id: 2, photo: mainPhotos[1], text: "Tuh kan, emang foto ini bagus. Kalau yang ini gimana? Pas kamu lagi jalan-jalan. Kamu kelihatan cakep di sini. Suka?", choices: [{ text: "Iya, aku suka!", next: 4 }, { text: "Hmm, jelek ah", next: 5 }] },
-            { id: 3, photo: mainPhotos[2], text: "Biasa aja? Yaudah coba lihat foto kamu yang ini. Pas rebahan natural aja tetep cantik. Kamu suka nggak hasil jepretanku?", choices: [{ text: "Wah, bagus! Suka!", next: 4 }, { text: "Hapus nggak?! Jelek!", next: 6 }] },
-            { id: 4, photo: mainPhotos[3], text: "Kalo foto yang ini? Ini salah satu favoritku sih, senyumnya nular banget. Setuju nggak?", choices: [{ text: "Setuju 100%", next: 7 }, { text: "Mukaku aneh di situ", next: 8 }] },
-            { id: 5, photo: mainPhotos[4], text: "Jelek? Oke, mari kita lihat foto yang LEBIH 'estetik'. Coba lihat muka konyol kamu pakai hoodie ungu ini. Masih mau bilang foto sebelumnya jelek?", choices: [{ text: "Hahaha ampun, iya yang tadi mendingan", next: 4 }, { text: "Tetep aja dua-duanya jelek!", next: 6 }] },
-            { id: 6, photo: mainPhotos[5], text: "Nggak akan aku hapus! Wle. Nah kalau foto ini, masa kamu nggak suka juga? Ini kan pas kamu lagi manis senyum.", choices: [{ text: "Oke, yang ini aku suka", next: 7 }, { text: "Gak suka gayanya", next: 9 }] },
-            { id: 7, photo: mainPhotos[6], text: "Nah, lanjut! Ini pas kita lagi jajan bareng. Kamu kangen nggak sih hari itu? Suka sama fotonya?", choices: [{ text: "Kangen! Fotonya juga gemes", next: 10 }, { text: "Fokus ke makanannya aja", next: 11 }] },
-            { id: 8, photo: mainPhotos[7], text: "Aneh apanya, lucu gitu. Coba lihat yang ini, pas kita foto bareng kucing. Sama-sama gemes! Suka kan?", choices: [{ text: "Iya deh, lumayan", next: 10 }, { text: "Tetep kurang ah", next: 9 }] },
-            { id: 9, photo: mainPhotos[8], text: "Kamu tuh emang susah dipuasin ya soal foto! Coba lihat gaya jari konyol kita ini. Suka nggak?", choices: [{ text: "Hahaha, iya ini lucu", next: 10 }, { text: "Gak! Hapus!", next: 12 }] },
-            { id: 10, photo: mainPhotos[9], text: "Yay! Oke, mari kita lihat foto yang agak sweet. Lihat kamu meluk boneka gede ini. Suka nggak nuansanya?", choices: [{ text: "Suka, sweet banget", next: 13 }, { text: "Geli ah lihatnya", next: 14 }] },
-            { id: 11, photo: mainPhotos[10], text: "Dasar. Kalau foto kamu pas lagi fokus, aku suka banget lihatnya. Kamu suka foto candid ini?", choices: [{ text: "Wah, ternyata bagus. Suka!", next: 13 }, { text: "Kelihatan tembem ih", next: 12 }] },
-            { id: 12, photo: mainPhotos[11], text: "Yee, yang penting momennya. Coba lihat foto kita pas lagi capek di motor tapi happy ini. Pasti kamu suka kan?", choices: [{ text: "Iya, suka banget", next: 13 }, { text: "Muka kita kucel banget", next: 15 }] },
-            { id: 13, photo: mainPhotos[12], text: "Mantap! Lanjut ke foto kamu yang paling sering aku pandangin kalau lagi kangen. Kamu sendiri suka nggak?", choices: [{ text: "Aww, iya aku suka", next: 16 }, { text: "Maluuu, biasa aja padahal", next: 17 }] },
-            { id: 14, photo: mainPhotos[13], text: "Geli ya? Yaudah ini ada foto derp kamu. Lebih suka yang ini daripada yang sweet?", choices: [{ text: "Hahaha iya mending ini", next: 16 }, { text: "Sama-sama bikin geli", next: 15 }] },
-            { id: 15, photo: mainPhotos[14], text: "Natural itu namanya! Coba lihat foto natural kita yang ini. Suka nggak?", choices: [{ text: "Iya deh, suka", next: 16 }, { text: "Nggak suka juga", next: 18 }] },
-            { id: 16, photo: mainPhotos[15], text: "Hampir selesai nih galerinya. Ini foto berdua kita yang menurutku paling dapet banget chemistry-nya. Suka kan?", choices: [{ text: "Iya dong, the best!", next: 19 }, { text: "Ada yang lebih bagus!", next: 19 }] },
-            { id: 17, photo: mainPhotos[16], text: "Nggak usah malu, emang cakep kok! Coba lihat satu lagi foto candid kamu ini. Gimana, suka?", choices: [{ text: "Oke deh, aku suka", next: 19 }, { text: "Nggak, aku jelek", next: 18 }] },
-            { id: 18, photo: mainPhotos[17], text: "Kamu dari tadi banyak nggak sukanya ya! Ini foto terakhir buat hukuman. Aib kita berdua!", choices: [{ text: "Hahaha ampun, suka!", next: 19 }, { text: "Tidaaaak!", next: 19 }] },
-            { id: 19, photo: mainPhotos[18], text: "Akhirnya sampai di foto favorit utamaku. Semua perjalanan kita ada di sini. Suka banget kan?", choices: [{ text: "Suka bangeeet!", next: 20 }, { text: "Sayang kamu!", next: 20 }] },
+            { id: 1, photo: mainPhotos[0], text: "Selamat ulang tahun sayang! Aku bikin galeri memori mini buat kita. Coba lihat foto pertama ini, senyum kamu manis banget.", choices: [{ text: "Lanjut dong!", next: 2 }] },
+            { id: 2, photo: mainPhotos[1], text: "Tuh kan, emang foto ini bagus. Kalau yang ini gimana? Pas kamu lagi jalan-jalan. Kamu kelihatan cakep di sini.", choices: [{ text: "Apalagi nih?", next: 3 }] },
+            { id: 3, photo: mainPhotos[2], text: "Pas rebahan natural aja tetep cantik. Kamu suka nggak hasil jepretanku yang ini?", choices: [{ text: "Next!", next: 4 }] },
+            { id: 4, photo: mainPhotos[3], text: "Kalo foto yang ini? Ini salah satu favoritku sih, senyumnya nular banget.", choices: [{ text: "Wah, terus?", next: 5 }] },
+            { id: 5, photo: mainPhotos[4], text: "Oke, mari kita lihat foto yang LEBIH 'estetik'. Coba lihat muka konyol ini.", choices: [{ text: "Gas lanjut!", next: 6 }] },
+            { id: 6, photo: mainPhotos[5], text: "Nah kalau foto ini, masa kamu nggak suka juga? Ini kan pas kamu lagi manis senyum.", choices: [{ text: "Lagi dong!", next: 7 }] },
+            { id: 7, photo: mainPhotos[6], text: "Lanjut! Ini pas kita lagi jajan bareng. Kamu kangen nggak sih hari itu?", choices: [{ text: "Selanjutnya...", next: 8 }] },
+            { id: 8, photo: mainPhotos[7], text: "Lucu gitu. Coba lihat yang ini, pas kita foto bareng kucing. Sama-sama gemes!", choices: [{ text: "Terus terus?", next: 9 }] },
+            { id: 9, photo: mainPhotos[8], text: "Coba lihat gaya jari konyol kita ini. Ini beneran memori yang nggak terlupakan!", choices: [{ text: "Hahaha, next!", next: 10 }] },
+            { id: 10, photo: mainPhotos[9], text: "Yay! Oke, mari kita lihat foto yang agak sweet. Lihat kamu meluk boneka gede ini.", choices: [{ text: "Lihat yang lain", next: 11 }] },
+            { id: 11, photo: mainPhotos[10], text: "Kalau foto kamu pas lagi fokus, aku suka banget lihatnya. Ini candid terbaik!", choices: [{ text: "Lanjut!", next: 12 }] },
+            { id: 12, photo: mainPhotos[11], text: "Yang penting momennya. Coba lihat foto kita pas lagi capek di motor tapi happy ini.", choices: [{ text: "Next lagi dong", next: 13 }] },
+            { id: 13, photo: mainPhotos[12], text: "Mantap! Lanjut ke foto kamu yang paling sering aku pandangin kalau lagi kangen.", choices: [{ text: "Aww, apalagi?", next: 14 }] },
+            { id: 14, photo: mainPhotos[13], text: "Ini ada foto derp kamu. Bukti kalau kita bisa konyol bareng-bareng terus.", choices: [{ text: "Lanjut!", next: 15 }] },
+            { id: 15, photo: mainPhotos[14], text: "Natural itu namanya! Coba lihat foto natural kita yang ini. Bagus kan?", choices: [{ text: "Okee next!", next: 16 }] },
+            { id: 16, photo: mainPhotos[15], text: "Hampir selesai nih galerinya. Ini foto berdua kita yang menurutku paling dapet banget chemistry-nya.", choices: [{ text: "Lanjut!", next: 17 }] },
+            { id: 17, photo: mainPhotos[16], text: "Nggak usah malu, emang cakep kok! Coba lihat satu lagi foto candid kamu ini.", choices: [{ text: "Terus?", next: 18 }] },
+            { id: 18, photo: mainPhotos[17], text: "Ini foto terakhir buat hukuman. Aib kita berdua! Hahaha.", choices: [{ text: "Ampun, next!", next: 19 }] },
+            { id: 19, photo: mainPhotos[18], text: "Akhirnya sampai di foto favorit utamaku. Semua perjalanan kita ada di sini.", choices: [{ text: "Lihat yang terakhir!", next: 20 }] },
             { id: 20, photo: mainPhotos[19], text: "Happy Birthday Sayang! Makasih udah nemenin bikin banyak momen bagus. Ini adalah akhir dari galeri mini kita. I love you! ❤️", choices: [] }
         ];
 
@@ -229,27 +202,24 @@
         }
 
         /**
-         * Latar Belakang menggunakan array backgroundPhotos
+         * Latar Belakang - LOGIKA GRID DINAMIS
+         * Memastikan 77 foto terdistribusi penuh di seluruh layer tanpa ada yang terpotong total.
          */
         function renderBackgroundGallery() {
             const bgContainer = document.getElementById('bg-gallery');
             bgContainer.innerHTML = ''; 
             
             const totalPhotos = backgroundPhotos.length;
-            const columns = 4; // Lebih sedikit kolom agar foto bisa lebih lebar
-            const rows = 6;   
-            const totalSlots = columns * rows; 
+            if(totalPhotos === 0) return;
 
-            for (let i = 0; i < totalSlots; i++) {
+            // Kalkulasi kolom dan baris akar kuadrat agar area terbagi sempurna berapapun jumlahnya
+            const columns = Math.ceil(Math.sqrt(totalPhotos)); 
+            const rows = Math.ceil(totalPhotos / columns);   
+
+            for (let i = 0; i < totalPhotos; i++) {
                 let imgEl = document.createElement('img');
                 
-                if (totalPhotos > 0) {
-                    imgEl.src = backgroundPhotos[i % totalPhotos];
-                } else {
-                    imgEl.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                    imgEl.style.backgroundColor = "white";
-                }
-                
+                imgEl.src = backgroundPhotos[i];
                 imgEl.className = 'bg-img-item';
                 imgEl.loading = 'lazy';
                 
@@ -258,18 +228,21 @@
                     this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; 
                 };
 
+                // Posisi berdasarkan rasio grid
                 const col = i % columns;
                 const row = Math.floor(i / columns);
                 
+                // Distribusi penyebaran persentase
                 const baseLeft = (col / columns) * 100;
                 const baseTop = (row / rows) * 100;
                 
+                // Efek acak (Jitter) agar terlihat disebar natural
                 const jitterX = (Math.random() * 20) - 10; 
-                const jitterY = (Math.random() * 15) - 7; 
+                const jitterY = (Math.random() * 20) - 10; 
                 
-                // Ukuran BESAR (250px hingga 450px)
-                const size = Math.floor(Math.random() * (450 - 250 + 1)) + 250; 
-                const rotation = Math.floor(Math.random() * 50) - 25; 
+                // Memvariasikan ukuran acak
+                const size = Math.floor(Math.random() * (400 - 200 + 1)) + 200; 
+                const rotation = Math.floor(Math.random() * 60) - 30; 
 
                 imgEl.style.width = `${size}px`;
                 imgEl.style.height = `${size}px`;
