@@ -12,6 +12,7 @@
             color: #334155;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
+            overflow-y: hidden; /* Mencegah scroll bocor karena background */
         }
         .polaroid {
             background: linear-gradient(to bottom right, #fff1f2, #fefce8, #f0f9ff);
@@ -44,7 +45,6 @@
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: 1; 
-            /* Opasitas disesuaikan agar 77 foto tidak menutupi visibilitas konten utama */
             opacity: 0.35;
             pointer-events: none;
             overflow: hidden;
@@ -56,7 +56,7 @@
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
             background-color: white;
             border: 4px solid #ffffff;
-            transition: transform 0.3s ease;
+            /* Transisi transform dihilangkan dari CSS untuk menghindari konflik dengan injeksi Javascript berpusat ganda */
         }
     </style>
 </head>
@@ -202,8 +202,10 @@
         }
 
         /**
-         * Latar Belakang - LOGIKA GRID DINAMIS
-         * Memastikan 77 foto terdistribusi penuh di seluruh layer tanpa ada yang terpotong total.
+         * PERBAIKAN LOGIKA GRID DINAMIS (ANCHOR POINT FIX)
+         * - Menyelesaikan masalah penumpukan di sudut kanan bawah.
+         * - Menambahkan translate(-50%, -50%) agar poros gambar berada tepat di titik sumbu XY.
+         * - Membesarkan skala gambar secara masif agar layar 100% tertutup.
          */
         function renderBackgroundGallery() {
             const bgContainer = document.getElementById('bg-gallery');
@@ -212,7 +214,6 @@
             const totalPhotos = backgroundPhotos.length;
             if(totalPhotos === 0) return;
 
-            // Kalkulasi kolom dan baris akar kuadrat agar area terbagi sempurna berapapun jumlahnya
             const columns = Math.ceil(Math.sqrt(totalPhotos)); 
             const rows = Math.ceil(totalPhotos / columns);   
 
@@ -228,27 +229,30 @@
                     this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; 
                 };
 
-                // Posisi berdasarkan rasio grid
                 const col = i % columns;
                 const row = Math.floor(i / columns);
                 
-                // Distribusi penyebaran persentase
-                const baseLeft = (col / columns) * 100;
-                const baseTop = (row / rows) * 100;
+                // Kalkulasi sebaran grid dipastikan merentang tepat 0 hingga 100% dari tepi ke tepi
+                const baseLeft = (col / Math.max(1, columns - 1)) * 100;
+                const baseTop = (row / Math.max(1, rows - 1)) * 100;
                 
-                // Efek acak (Jitter) agar terlihat disebar natural
-                const jitterX = (Math.random() * 20) - 10; 
-                const jitterY = (Math.random() * 20) - 10; 
+                const jitterX = (Math.random() * 16) - 8; 
+                const jitterY = (Math.random() * 16) - 8; 
                 
-                // Memvariasikan ukuran acak
-                const size = Math.floor(Math.random() * (400 - 200 + 1)) + 200; 
+                // SKALA BESAR: Resolusi gambar disetel jauh lebih dominan agar tertutup sempurna
+                const size = Math.floor(Math.random() * (550 - 250 + 1)) + 250; 
                 const rotation = Math.floor(Math.random() * 60) - 30; 
 
                 imgEl.style.width = `${size}px`;
                 imgEl.style.height = `${size}px`;
+                
+                // Posisi dasar CSS
                 imgEl.style.left = `${baseLeft + jitterX}%`;
                 imgEl.style.top = `${baseTop + jitterY}%`;
-                imgEl.style.transform = `rotate(${rotation}deg)`;
+                
+                // KOREKSI KRITIKAL: Pusatkan titik jangkar gambar (anchor point) ke koordinat, agar tidak meluncur keluar layar.
+                imgEl.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+                
                 imgEl.style.zIndex = 1;
 
                 bgContainer.appendChild(imgEl);
