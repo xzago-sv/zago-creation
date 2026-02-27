@@ -53,9 +53,9 @@
             position: absolute;
             object-fit: cover;
             border-radius: 0.5rem;
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
             background-color: white;
-            border: 6px solid #ffffff;
+            border: 5px solid #ffffff;
         }
     </style>
 </head>
@@ -158,7 +158,7 @@
         const textEl = document.getElementById('scene-text');
         const choicesContainer = document.getElementById('choices-container');
 
-        // Fungsi Auto-Fallback untuk menetralisir Case Sensitivity ekstensi file (Solusi Kritik #2)
+        // Fungsi Auto-Fallback untuk menetralisir Case Sensitivity ekstensi file
         function generateFallbacks(filename) {
             if (!filename) return [];
             const base = filename.substring(0, filename.lastIndexOf('.'));
@@ -190,7 +190,6 @@
                 hintEl.innerText = "";
             } else {
                 const fallbacks = generateFallbacks(scene.photo);
-                // Hapus duplikat dari array fallbacks
                 const uniqueFallbacks = [...new Set(fallbacks)];
                 let attemptIndex = 0;
 
@@ -211,7 +210,7 @@
                     };
                     imgLoad.onerror = function() {
                         attemptIndex++;
-                        attemptLoad(); // Coba ekstensi berikutnya
+                        attemptLoad(); 
                     };
                     imgLoad.src = uniqueFallbacks[attemptIndex];
                 }
@@ -230,9 +229,9 @@
         }
 
         /**
-         * PERBAIKAN GRID LATAR BELAKANG (Solusi Kritik #1)
-         * - Scale BaseLeft dan BaseTop dilebarkan drastis menjadi rentang -15% hingga 115% agar tidak ada celah di tepian.
-         * - Ukuran gambar di-set masif (350px - 750px) agar area benar-benar tumpang tindih padat.
+         * PERBAIKAN VISIBILITAS GRID LATAR BELAKANG
+         * - Ukuran dikurangi (180px - 320px) agar foto tidak menumpuk buta.
+         * - Jitter (acak posisi) dikurangi agar foto tetap terdistribusi teratur.
          */
         function renderBackgroundGallery() {
             const bgContainer = document.getElementById('bg-gallery');
@@ -241,7 +240,6 @@
             const totalPhotos = backgroundPhotos.length;
             if(totalPhotos === 0) return;
 
-            // Memaksa grid menjadi lebih padat dan luas
             const columns = Math.ceil(Math.sqrt(totalPhotos)); 
             const rows = Math.ceil(totalPhotos / columns);   
 
@@ -253,7 +251,6 @@
                 const uniqueFallbacks = [...new Set(fallbacks)];
                 let attemptIndex = 0;
 
-                // Logika fallback khusus untuk background (tanpa UI teks)
                 function attemptBgLoad() {
                     if (attemptIndex >= uniqueFallbacks.length) {
                         imgEl.style.backgroundColor = '#f1f5f9';
@@ -276,21 +273,21 @@
                 const col = i % columns;
                 const row = Math.floor(i / columns);
                 
-                // EKSPANSI GRID: Lebarkan rasio penyebaran agar area kosong tertutup sepenuhnya (Bleding Edge -15% to 115%)
-                const startRatio = -15;
-                const endRatio = 115;
+                // Distribusi diseimbangkan, tidak melebar terlalu jauh ke luar layar
+                const startRatio = -5;
+                const endRatio = 105;
                 const range = endRatio - startRatio;
                 
                 const baseLeft = startRatio + (col / Math.max(1, columns - 1)) * range;
                 const baseTop = startRatio + (row / Math.max(1, rows - 1)) * range;
                 
-                // Variasi posisi acak
-                const jitterX = (Math.random() * 20) - 10; 
-                const jitterY = (Math.random() * 20) - 10; 
+                // Deviasi posisi diperkecil agar tidak menimpa foto tetangganya secara fatal
+                const jitterX = (Math.random() * 12) - 6; 
+                const jitterY = (Math.random() * 12) - 6; 
                 
-                // DIMENSI RAKSASA: Memastikan tidak ada sela-sela putih
-                const size = Math.floor(Math.random() * (750 - 350 + 1)) + 350; 
-                const rotation = Math.floor(Math.random() * 80) - 40; 
+                // SKALA DIKECILKAN: Memberi ruang bagi foto untuk terlihat sebagai entitas individu
+                const size = Math.floor(Math.random() * (320 - 180 + 1)) + 180; 
+                const rotation = Math.floor(Math.random() * 60) - 30; 
 
                 imgEl.style.width = `${size}px`;
                 imgEl.style.height = `${size}px`;
