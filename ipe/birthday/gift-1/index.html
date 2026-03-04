@@ -61,6 +61,12 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 relative">
 
+    <!-- AUDIO PLAYER -->
+    <!-- UBAH "lagu-kita.mp3" DENGAN NAMA FILE LAGU ASLI ANDA -->
+    <audio id="bgm" loop>
+        <source src="lagu-kita.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- Gallery Background (Z-index 1) -->
     <div id="bg-gallery"></div>
 
@@ -70,7 +76,7 @@
             <div class="absolute -top-4 -right-4 text-4xl transform rotate-12">✨</div>
             <div class="absolute -bottom-4 -left-4 text-4xl transform -rotate-12">🎉</div>
             
-            <div id="image-container" class="w-full aspect-square mb-6 rounded-lg overflow-hidden relative shadow-inner border-2 border-pink-100 bg-white">
+            <div id="image-container" class="w-full aspect-square mb-6 rounded-lg overflow-hidden relative shadow-inner border-2 border-pink-100 bg-white hidden">
                 <img id="scene-image" src="" alt="Scene Image" class="w-full h-full object-cover hidden">
                 <div id="placeholder-text" class="absolute inset-0 image-placeholder text-sm px-6 flex flex-col gap-2">
                     <span class="text-3xl" id="placeholder-icon">📷</span>
@@ -81,7 +87,7 @@
             
             <div class="px-2">
                 <p id="scene-text" class="story-text-highlight text-lg leading-relaxed text-center font-bold min-h-[80px] flex items-center justify-center">
-                    Menyiapkan memori...
+                    <!-- Text Injected Here -->
                 </p>
             </div>
         </div>
@@ -92,9 +98,6 @@
     </div>
 
     <script>
-        /**
-         * 77 FOTO UNIK DARI HASIL UNGGAHAN
-         */
         const backgroundPhotos = [
             "IMG_2671.jpg", "IMG_2692.jpg", "IMG_2707.jpg", "IMG_2708.jpg", "IMG_3941.jpg", 
             "IMG_3949.jpg", "IMG_3950.jpg", "IMG_4270.jpg", "IMG_4271.jpg", "IMG_4279.jpg", 
@@ -125,29 +128,38 @@
             "IMG_4982.jpg", "IMG_5007.jpg"
         ];
 
-        const mainPhotos = backgroundPhotos.slice(0, 20);
+        const mainPhotos = [
+            "1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg",
+            "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",
+            "11.jpg", "12.jpg", "13.jpg", "14.jpg", "15.jpg",
+            "16.jpg", "17.jpg", "18.jpg", "19.jpg", "20.jpg"
+        ];
 
+        // LOGIKA BARU: Ganjil (1,3,5..19) -> Genap (2,4,6..20)
         const storyData = [
-            { id: 1, photo: mainPhotos[0], text: "Selamat ulang tahun sayang! Aku bikin galeri memori mini buat kita. Coba lihat foto pertama ini, senyum kamu manis banget.", choices: [{ text: "Lanjut dong!", next: 2 }] },
-            { id: 2, photo: mainPhotos[1], text: "Tuh kan, emang foto ini bagus. Kalau yang ini gimana? Pas kamu lagi jalan-jalan. Kamu kelihatan cakep di sini.", choices: [{ text: "Apalagi nih?", next: 3 }] },
-            { id: 3, photo: mainPhotos[2], text: "Pas rebahan natural aja tetep cantik. Kamu suka nggak hasil jepretanku yang ini?", choices: [{ text: "Next!", next: 4 }] },
-            { id: 4, photo: mainPhotos[3], text: "Kalo foto yang ini? Ini salah satu favoritku sih, senyumnya nular banget.", choices: [{ text: "Wah, terus?", next: 5 }] },
-            { id: 5, photo: mainPhotos[4], text: "Oke, mari kita lihat foto yang LEBIH 'estetik'. Coba lihat muka konyol ini.", choices: [{ text: "Gas lanjut!", next: 6 }] },
-            { id: 6, photo: mainPhotos[5], text: "Nah kalau foto ini, masa kamu nggak suka juga? Ini kan pas kamu lagi manis senyum.", choices: [{ text: "Lagi dong!", next: 7 }] },
-            { id: 7, photo: mainPhotos[6], text: "Lanjut! Ini pas kita lagi jajan bareng. Kamu kangen nggak sih hari itu?", choices: [{ text: "Selanjutnya...", next: 8 }] },
-            { id: 8, photo: mainPhotos[7], text: "Lucu gitu. Coba lihat yang ini, pas kita foto bareng kucing. Sama-sama gemes!", choices: [{ text: "Terus terus?", next: 9 }] },
-            { id: 9, photo: mainPhotos[8], text: "Coba lihat gaya jari konyol kita ini. Ini beneran memori yang nggak terlupakan!", choices: [{ text: "Hahaha, next!", next: 10 }] },
-            { id: 10, photo: mainPhotos[9], text: "Yay! Oke, mari kita lihat foto yang agak sweet. Lihat kamu meluk boneka gede ini.", choices: [{ text: "Lihat yang lain", next: 11 }] },
-            { id: 11, photo: mainPhotos[10], text: "Kalau foto kamu pas lagi fokus, aku suka banget lihatnya. Ini candid terbaik!", choices: [{ text: "Lanjut!", next: 12 }] },
-            { id: 12, photo: mainPhotos[11], text: "Yang penting momennya. Coba lihat foto kita pas lagi capek di motor tapi happy ini.", choices: [{ text: "Next lagi dong", next: 13 }] },
-            { id: 13, photo: mainPhotos[12], text: "Mantap! Lanjut ke foto kamu yang paling sering aku pandangin kalau lagi kangen.", choices: [{ text: "Aww, apalagi?", next: 14 }] },
-            { id: 14, photo: mainPhotos[13], text: "Ini ada foto derp kamu. Bukti kalau kita bisa konyol bareng-bareng terus.", choices: [{ text: "Lanjut!", next: 15 }] },
-            { id: 15, photo: mainPhotos[14], text: "Natural itu namanya! Coba lihat foto natural kita yang ini. Bagus kan?", choices: [{ text: "Okee next!", next: 16 }] },
-            { id: 16, photo: mainPhotos[15], text: "Hampir selesai nih galerinya. Ini foto berdua kita yang menurutku paling dapet banget chemistry-nya.", choices: [{ text: "Lanjut!", next: 17 }] },
-            { id: 17, photo: mainPhotos[16], text: "Nggak usah malu, emang cakep kok! Coba lihat satu lagi foto candid kamu ini.", choices: [{ text: "Terus?", next: 18 }] },
-            { id: 18, photo: mainPhotos[17], text: "Ini foto terakhir buat hukuman. Aib kita berdua! Hahaha.", choices: [{ text: "Ampun, next!", next: 19 }] },
-            { id: 19, photo: mainPhotos[18], text: "Akhirnya sampai di foto favorit utamaku. Semua perjalanan kita ada di sini.", choices: [{ text: "Lihat yang terakhir!", next: 20 }] },
-            { id: 20, photo: mainPhotos[19], text: "Happy Birthday Sayang! Makasih udah nemenin bikin banyak momen bagus. Ini adalah akhir dari galeri mini kita. I love you! ❤️", choices: [] }
+            // SEQUENCE GANJIL
+            { id: 1, photo: mainPhotos[0], text: "Hai Ipe sayangku, masih ingatkah kamu dengan foto ini? 👋🥰 Foto Day 1 kita ketemu, first impression aku ke kamu dan kamu ke aku. Hari dimana beneran aku memutuskan dan berpikir “ok aku suka sama orang ini”. ✨ Masih sangat menggebu-gebu ini kita saling cerita satu sama lain 💕", choices: [{ text: "Next ❤️", next: 3 }] },
+            { id: 3, photo: mainPhotos[2], text: "Sebenarnya di Day 2 ini aku lumayan deg-degan 🫣💓 karena berpikir “apakah ini Ipe beneran mau main berdua sama aku?” karena ini sebenarnya kan day 1 kita main berdua atau istilahnya “date”. Seruwwww banget!! 🎢 Tapi karena main seharian mulai dari Kiara Artha Park, Nonton, dan berakhir ngobrol banyak. 🍿🥰", choices: [{ text: "Next ❤️", next: 5 }] },
+            { id: 5, photo: mainPhotos[4], text: "Sampai juga di Day 3! 🤭 Ini sebenarnya niatnya tidak bertemu tapi rasanya aku pengen banget ketemu wkwkwk. Akhirnya berujung aku main nyamperin kamu di rumah dan nemenin kamu les sama Kiyaaaa. 🛵 Lucu banget ini pertama ngapelin kamu dan nyamperin kamu di rumah kamu mueheheh. 🏠🤣💕", choices: [{ text: "Next ❤️", next: 7 }] },
+            { id: 7, photo: mainPhotos[5], text: "Sudah lama setelah itu ada berbagai drama ilang muncul ilang muncul, ilang lama dan akhirnya ketemu lagi Day 4. 🎭 Di hari itu seru banget karena kita keliling ke Kebun Binatang, 🐒 nemenin kamu ke RS, 🏥 kamu nemenin aku nonton Avatar (literally nemenin) soalnya aku nonton, kamunya tidur. 😴🤣", choices: [{ text: "Next ❤️", next: 9 }] },
+            { id: 9, photo: mainPhotos[8], text: "Udah abis itupun kita ilang-ilangan lagi, sampai akhirnya masuk ke Day 5 kita ketemu. 👻 Pertemuan itu agaknya tidak terduga karena kita ketemu di nikahan Dhea dimana aku pernah bilang juga di nikahan tuh sakral banget. 💒 Terlebih AKU DAPET BUNGA WOYYYYYY!! 💐😱 Agak menambah kesan sakralnya. Disini juga buka-bukaan kita tentang apa yang dirasain dan sebenarnya terjadi hari-hari sebelumnya kita deket. ✨🥺", choices: [{ text: "Next ❤️", next: 11 }] },
+            { id: 11, photo: mainPhotos[10], text: "Telah usai masa ilang-ilangan kita dan terbitlah berpacaran untuk pertama kalinya! 🌅👫 Day 6 ini menjadikan date pertama kita setelah official jadi pacar. Pertama kali ketemu kamu nyamperin aku ke Jakarta, lucu banget kamu ayanggg. 🚂😍💖", choices: [{ text: "Next ❤️", next: 13 }] },
+            { id: 13, photo: mainPhotos[12], text: "Day 7 menjadi date kedua setelah official. 🏙️ Setelah kamu samper aku ke Jakarta, ga aku biarin kamu pulang sendirian, ditambah masih pengen ketemu dan main heheh. 🚶‍♂️ Seru banget ini pertama kalinya kita Photobutttt!! 📸😜✨", choices: [{ text: "Next ❤️", next: 15 }] },
+            { id: 15, photo: mainPhotos[14], text: "Tiba saatnya mengapeli kamu di Day 8 bertemu. Jujurrr seru banget karena kita akhirnya ke Jaling setelah berabad-abad akhirnya kesampean juga keinginan kamu itu! 🛵 Meskipun ujan-ujanan tapi ga pernah akan terlupakan masanya itu. 🌧️☔ Ini juga mengawali Day One bertemu sama Calon Mertua heheheh. Bismillah. 🤝🙏😁", choices: [{ text: "Next ❤️", next: 17 }] },
+            { id: 17, photo: mainPhotos[16], text: "Ngga berhenti di aku ketemu keluarga kamu, entah gimana ceritanya tiba-tiba di Day 9 ini Kakak aku dateng ke Bandung dan seakan gantian kamu yang ketemu keluarga aku. 👨‍👩‍👧‍👦 Seru bangetttt, mana kita keliling-keliling dan jaga rumah dan semua hal ini. 🚄🏡😆", choices: [{ text: "Next ❤️", next: 19 }] },
+            { id: 19, photo: mainPhotos[18], text: "Di Day 10 ini kita keliling dan memenuhi BM kamu ke mesin capit (yhaaa meskipun ZONKKK BERATZZZZZ 👾🕹️). Tapi seruwww banget karena disini kita banyak keliling, kamu ngerasain betapa enaknya ecimmmmm, 🍦 kita baca-baca buku, 📖 kita juga ke Photobutttttt yang sangat WOW SERU BANGETTT!! 📸🔥", choices: [{ text: "Next ❤️", next: 2 }] }, // Transisi dari Ganjil ke Genap
+
+            // SEQUENCE GENAP
+            { id: 2, photo: mainPhotos[1], text: "Selamat Ulang Tahun sayangku! 🎂🥳 Semoga di hari ulang tahunmu ini kamu bahagia, dan sebahagia itu sampai kamu bahkan lupa kalo kamu sedang tidak bermimpi hari ini. 🎉💖", choices: [{ text: "Next ❤️", next: 4 }] },
+            { id: 4, photo: mainPhotos[3], text: "Semoga di hari ulang tahun kamu ini selalu diberkahi hal positif 🌟 dan selalu diberikan kekuatan serta kesehatan menghadapi hiruk pikuk dunia. 💪🌍💖", choices: [{ text: "Next ❤️", next: 6 }] },
+            { id: 6, photo: mainPhotos[5], text: "Aku disini akan selalu mendampingimu di segala masa-masa kamu yahhh. 🫂💞 Ga peduli dari masa paling sulit sampai paling menyenangkan, yang penting bareng kamu. 🫶✨", choices: [{ text: "Next ❤️", next: 8 }] },
+            { id: 8, photo: mainPhotos[7], text: "Selama aku mengenalmu kurang lebih selama 7 bulan ini, entah mengapa rasanya seperti sudah kenal 3 tahun. 🕰️ Aku merasa sangat dekat dan intim sama kamu. 💞🥺", choices: [{ text: "Next ❤️", next: 10 }] },
+            { id: 10, photo: mainPhotos[9], text: "Selama itu juga aku semakin hari semakin sayang dan semakin cinta sama kamu. 📈❤️ Bener kata Rania, cintaku berawal dari 100 namun bukan berkurang melainkan selalu bertambah. 🔥🥰", choices: [{ text: "Next ❤️", next: 12 }] },
+            { id: 12, photo: mainPhotos[11], text: "Rafifah Irbahku sayang, semangat terus yaaaaa! 📣 Kamu selalu keren bahkan jauh sebelum aku mengenalmu juga aku tau kamu sekeren itu. 🤩🌟❤️", choices: [{ text: "Next ❤️", next: 14 }] },
+            { id: 14, photo: mainPhotos[13], text: "Kamu cantik, kamu imut, kamu keren, kamu lucu, kamu semua-muanya kamuuuu. 🦋🎀 Kamu duniaku dan semoga aku bisa menjadi dunia yang kamu impikan selama ini. 🌎💘🥺", choices: [{ text: "Next ❤️", next: 16 }] },
+            { id: 16, photo: mainPhotos[15], text: "Sayang, semoga semua ucapan aku kali ini dapat mewakilkan sepercik betapa besarnya cinta dan sayang aku ke kamu. 💌💗🌊", choices: [{ text: "Next ❤️", next: 18 }] },
+            { id: 18, photo: mainPhotos[17], text: "Aku selalu menginginkan kesehatan dan kebahagiaan diri kamu. Aku juga selalu mendoakan yang terbaik untukmu. 🤲✨🕊️🩷", choices: [{ text: "Next ❤️", next: 20 }] },
+            { id: 20, photo: mainPhotos[19], text: "Lastttttt!!!!!! 🚀 Mari kita lanjutkan cerita singkat ini menjadi cerita yang sangat sangat panjang nan tiada akhir. ♾️ I Love U 1000000000000+++ ❤️💍🎆", choices: [] }
         ];
 
         const imageEl = document.getElementById('scene-image');
@@ -157,21 +169,84 @@
         const iconEl = document.getElementById('placeholder-icon');
         const textEl = document.getElementById('scene-text');
         const choicesContainer = document.getElementById('choices-container');
+        const imageContainer = document.getElementById('image-container');
 
-        // Fungsi Auto-Fallback untuk menetralisir Case Sensitivity ekstensi file
+        // Fungsi Auto-Fallback Ekstensi File
         function generateFallbacks(filename) {
             if (!filename) return [];
             const base = filename.substring(0, filename.lastIndexOf('.'));
-            return [
-                filename, 
-                base + '.JPG', 
-                base + '.jpeg', 
-                base + '.JPEG', 
-                base + '.png',
-                base + '.PNG'
-            ];
+            return [filename, base + '.JPG', base + '.jpeg', base + '.JPEG', base + '.png', base + '.PNG'];
         }
 
+        // TRIGGER AUDIO UTAMA
+        function playAudio() {
+            const bgm = document.getElementById('bgm');
+            if(bgm.paused) {
+                bgm.play().catch(e => console.log("Auto-play diblokir browser, butuh interaksi user yang sah.", e));
+            }
+        }
+
+        // HALAMAN 1 : SAMBUTAN
+        function renderSplash1() {
+            imageContainer.classList.add('hidden'); // Sembunyikan frame foto
+            textEl.innerHTML = "Halo Rafifah Irbah Putri Nusanjaya ❤️<br><br>Apakah kamu siap berpetualang denganku di hari ulang tahunmu?";
+            
+            choicesContainer.innerHTML = '';
+            
+            const btn1 = document.createElement('button');
+            btn1.className = "w-full bg-white hover:bg-pink-50 text-pink-700 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 text-center border-b-4 border-pink-200 active:border-b-0";
+            btn1.innerText = "Siapppppp 🤩";
+            btn1.onclick = () => { playAudio(); renderSplash2(); };
+            
+            const btn2 = document.createElement('button');
+            btn2.className = "w-full bg-white hover:bg-pink-50 text-pink-700 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 text-center border-b-4 border-pink-200 active:border-b-0";
+            btn2.innerText = "Siapp Banget 🥰";
+            btn2.onclick = () => { playAudio(); renderSplash2(); };
+
+            choicesContainer.appendChild(btn1);
+            choicesContainer.appendChild(btn2);
+        }
+
+        // HALAMAN 2 : VALIDASI TANGGAL
+        function renderSplash2() {
+            textEl.innerText = "Masukkan dulu tanggal penting kita 😠";
+            
+            choicesContainer.innerHTML = `
+                <input type="text" id="date-input" class="w-full text-center border-2 border-pink-200 rounded-xl py-3 px-4 focus:outline-none focus:border-pink-400 font-bold text-slate-700" placeholder="Ketik disini...">
+                <p id="error-msg" class="hidden text-red-500 font-bold text-center text-sm animate-bounce mt-2">BISABISANYA SALAHHH!!!!!</p>
+                <button id="submit-btn" class="w-full bg-white hover:bg-pink-50 text-pink-700 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 text-center border-b-4 border-pink-200 active:border-b-0 mt-4">Submit</button>
+            `;
+
+            document.getElementById('submit-btn').onclick = () => {
+                const val = document.getElementById('date-input').value.trim().toLowerCase();
+                if (val === '13 januari 2026') {
+                    renderSplash3(); // Arahkan ke halaman pembuka 3
+                } else {
+                    document.getElementById('error-msg').classList.remove('hidden');
+                    document.getElementById('date-input').value = ''; // Kosongkan field
+                }
+            };
+        }
+
+        // HALAMAN 3 : PENGANTAR CERITA
+        function renderSplash3() {
+            imageContainer.classList.add('hidden'); // Pastikan frame foto tetap sembunyi
+            textEl.innerHTML = "Mari kita menengok beberapa waktu kebelakang 🕰️<br><br>Aku akan rangkum pertemuan kita dan beberapa ucapan dan doa untuk Ulang Tahunmu 📜🎂✨";
+            
+            choicesContainer.innerHTML = '';
+            
+            const btn = document.createElement('button');
+            btn.className = "w-full bg-white hover:bg-pink-50 text-pink-700 font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 text-center border-b-4 border-pink-200 active:border-b-0";
+            btn.innerText = "Mulai Petualangan 🚀";
+            btn.onclick = () => { 
+                imageContainer.classList.remove('hidden'); // Baru munculkan frame foto saat masuk scene 1
+                renderScene(1); 
+            };
+            
+            choicesContainer.appendChild(btn);
+        }
+
+        // HALAMAN UTAMA : RENDER CERITA FOTO
         function renderScene(sceneId) {
             const scene = storyData.find(s => s.id === sceneId);
             if (!scene) return;
@@ -228,11 +303,7 @@
             });
         }
 
-        /**
-         * PERBAIKAN VISIBILITAS GRID LATAR BELAKANG
-         * - Ukuran dikurangi (180px - 320px) agar foto tidak menumpuk buta.
-         * - Jitter (acak posisi) dikurangi agar foto tetap terdistribusi teratur.
-         */
+        // BACKGROUND RENDERING
         function renderBackgroundGallery() {
             const bgContainer = document.getElementById('bg-gallery');
             bgContainer.innerHTML = ''; 
@@ -273,7 +344,6 @@
                 const col = i % columns;
                 const row = Math.floor(i / columns);
                 
-                // Distribusi diseimbangkan, tidak melebar terlalu jauh ke luar layar
                 const startRatio = -5;
                 const endRatio = 105;
                 const range = endRatio - startRatio;
@@ -281,11 +351,9 @@
                 const baseLeft = startRatio + (col / Math.max(1, columns - 1)) * range;
                 const baseTop = startRatio + (row / Math.max(1, rows - 1)) * range;
                 
-                // Deviasi posisi diperkecil agar tidak menimpa foto tetangganya secara fatal
                 const jitterX = (Math.random() * 12) - 6; 
                 const jitterY = (Math.random() * 12) - 6; 
                 
-                // SKALA DIKECILKAN: Memberi ruang bagi foto untuk terlihat sebagai entitas individu
                 const size = Math.floor(Math.random() * (320 - 180 + 1)) + 180; 
                 const rotation = Math.floor(Math.random() * 60) - 30; 
 
@@ -303,7 +371,7 @@
 
         window.onload = () => {
             renderBackgroundGallery();
-            renderScene(1);
+            renderSplash1(); 
         };
     </script>
 </body>
