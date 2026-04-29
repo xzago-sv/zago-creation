@@ -9,8 +9,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <style>
 :root {
-  --ukuran-bentuk: clamp(100px, 20vw, 300px); 
-  --ukuran-angka: clamp(2.34rem, 4.5vw, 5.85rem); 
+  /* TEKNIK SUPER-SAMPLING HD: Resolusi asli dirender 3x lebih besar dari sebelumnya */
+  --ukuran-bentuk: clamp(300px, 60vw, 900px); 
+  --ukuran-angka: clamp(7.02rem, 13.5vw, 17.55rem); 
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -73,25 +74,36 @@ body::before {
   width: var(--ukuran-bentuk); 
   height: var(--ukuran-bentuk);
   aspect-ratio: 1 / 1; 
-  padding: 10px; 
+  padding: 30px; /* Padding dikali 3 untuk ruang proporsional HD */
   display:flex; align-items:center; justify-content:center; text-align: center;
   opacity:0; transform-origin:center; mix-blend-mode: screen;
   will-change: transform, opacity; 
+  /* Memaksa browser merender vektor dengan ketajaman maksimum */
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
 }
 
 .stream-item.red {
-  border-radius:50%; border:clamp(3px, 1vw, 6px) solid #e57373; 
+  border-radius:50%; border:clamp(9px, 3vw, 18px) solid #e57373; /* Border dikali 3 */
   background:rgba(229, 115, 115, 0.08); 
 }
 .stream-item.blue {
-  border-radius:12px; border:clamp(3px, 1vw, 6px) solid #64b5f6; 
+  border-radius:12px; border:clamp(9px, 3vw, 18px) solid #64b5f6; /* Border dikali 3 */
   background:rgba(100, 181, 246, 0.08); 
 }
 
 .stream-item .katex { 
   font-size: var(--ukuran-angka) !important; 
   font-weight: 900 !important;
-  -webkit-text-stroke: 1px currentColor; 
+  -webkit-text-stroke: 3px currentColor; /* Stroke dikali 3 untuk ketebalan HD */
+}
+
+/* Modifikasi Dinamis Mode Blinking (Penghapusan Bingkai) */
+#gameScreen.blinking .stream-item {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 .crosshair-h, .crosshair-v { position:absolute; top:50%; left:50%; background:rgba(255,255,255,0.04); pointer-events:none; z-index:9; transform:translate(-50%,-50%); }
@@ -189,7 +201,7 @@ body::before {
   <div class="mode-row">
     <button class="mode-btn" onclick="setMode(this,'up-down')">UP - DOWN</button>
     <button class="mode-btn sel" onclick="setMode(this,'chaos')">CHAOS</button>
-    <button class="mode-btn" onclick="setMode(this,'pop-up')">POP UP</button>
+    <button class="mode-btn" onclick="setMode(this,'blinking')">BLINKING</button>
   </div>
   <div class="spd-row">
     <button class="spd sel" onclick="setSpd(this,2000)">2s</button>
@@ -264,17 +276,6 @@ let scrollOffset = -0.5, lastFrame = null, animating = false, rafId = null, last
 // KOORDINAT FIXED
 const anglesRed = [1.0, 2.5, 4.0, 5.5, 0.5, 3.1, 1.8, 4.5, 6.0, 2.2, 3.8, 5.1, 0.9, 2.8, 4.2, 5.8, 1.5, 3.5, 0.3, 2.0, 4.8, 6.2, 1.1, 3.2, 5.0];
 const anglesBlue = [3.0, 5.0, 1.5, 3.5, 2.0, 5.5, 4.2, 0.8, 2.8, 4.8, 1.2, 2.5, 3.3, 5.2, 0.5, 3.1, 4.0, 6.1, 2.5, 4.5, 1.8, 3.8, 5.5, 0.9, 2.2];
-const popRatios = [
-  {rx: 0.2, ry: 0.2, bx: -0.2, by: -0.2}, {rx: -0.1, ry: 0.3, bx: 0.3, by: -0.1}, {rx: 0.3, ry: -0.2, bx: -0.3, by: 0.2},
-  {rx: -0.25, ry: -0.25, bx: 0.25, by: 0.25}, {rx: 0.15, ry: -0.3, bx: -0.15, by: 0.3}, {rx: -0.3, ry: 0.1, bx: 0.2, by: -0.2},
-  {rx: 0.25, ry: 0.15, bx: -0.25, by: -0.15}, {rx: -0.15, ry: -0.15, bx: 0.15, by: 0.15}, {rx: 0.1, ry: 0.25, bx: -0.1, by: -0.25},
-  {rx: -0.2, ry: -0.3, bx: 0.2, by: 0.3}, {rx: 0.3, ry: -0.1, bx: -0.3, by: 0.1}, {rx: -0.25, ry: 0.2, bx: 0.25, by: -0.2},
-  {rx: 0.15, ry: 0.15, bx: -0.15, by: -0.15}, {rx: -0.1, ry: -0.2, bx: 0.1, by: 0.2}, {rx: 0.2, ry: -0.25, bx: -0.2, by: 0.25},
-  {rx: -0.3, ry: 0.3, bx: 0.3, by: -0.3}, {rx: 0.25, ry: 0.0, bx: -0.25, by: 0.0}, {rx: -0.2, ry: -0.1, bx: 0.2, by: 0.1},
-  {rx: 0.1, ry: -0.3, bx: -0.1, by: 0.3}, {rx: -0.15, ry: 0.25, bx: 0.15, by: -0.25}, {rx: 0.3, ry: 0.15, bx: -0.3, by: -0.15},
-  {rx: -0.25, ry: -0.2, bx: 0.25, by: 0.2}, {rx: 0.2, ry: 0.3, bx: -0.2, by: -0.3}, {rx: -0.1, ry: 0.1, bx: 0.1, by: -0.1},
-  {rx: 0.15, ry: -0.15, bx: -0.15, by: 0.15}
-];
 
 let redItems = [], blueItems = [];
 
@@ -282,6 +283,9 @@ function setMode(el, m) {
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel'); gameMode = m;
   document.getElementById('taglineText').textContent = m.toUpperCase().replace('-',' ');
+  
+  // Memicu CSS kustom khusus jika mode blinking
+  document.getElementById('gameScreen').className = m === 'blinking' ? 'blinking' : '';
 }
 function setSpd(el, ms) {
   document.querySelectorAll('.spd').forEach(b=>b.classList.remove('sel'));
@@ -306,42 +310,53 @@ function render() {
   const container = document.getElementById('gameScreen');
   const W = container.clientWidth, H = container.clientHeight;
   
-  // MENGHAPUS ILUSI OPTIK ANISOTROPI VEKTOR:
-  // Jarak lintas (span) kini UNIVERSAL, dikalkulasi dari hipotenusa absolut rasio 16:9 ditambah buffer keluar layar.
-  // Ini memaksa pixel-per-second kecepatan Up-Down SAMA PERSIS 100% dengan Chaos.
   const universalSpan = Math.hypot(W, H) + 400; 
 
   for(let i=0; i<N; i++) {
     const diff = Math.abs(scrollOffset - i); 
-    let xr=0, yr=0, xb=0, yb=0, s=1, o=0;
+    const localDiff = scrollOffset - i;
+    let xr=0, yr=0, xb=0, yb=0, sRed=1, sBlue=1, oRed=0, oBlue=0;
 
     if(gameMode === 'chaos') {
-      const travelDist = (scrollOffset - i) * universalSpan; 
+      const travelDist = localDiff * universalSpan; 
       xr = Math.cos(anglesRed[i]) * travelDist; 
       yr = Math.sin(anglesRed[i]) * travelDist;
       xb = Math.cos(anglesBlue[i]) * travelDist; 
       yb = Math.sin(anglesBlue[i]) * travelDist;
-      s = 0.85; 
-      o = diff <= 0.5 ? 1 : 0; 
+      sRed = sBlue = 0.85 / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      oRed = oBlue = diff <= 0.5 ? 1 : 0; 
     } else if(gameMode === 'up-down') {
-      // Menggunakan lintasan yang sama panjang dengan Chaos
-      const travelDist = (scrollOffset - i) * universalSpan; 
+      const travelDist = localDiff * universalSpan; 
       xr = -W*0.22; yr = travelDist; 
       xb = W*0.22; yb = -travelDist; 
-      s = 0.85; 
-      o = diff <= 0.5 ? 1 : 0; 
-    } else if(gameMode === 'pop-up') {
-      xr = popRatios[i].rx * W; yr = popRatios[i].ry * H;
-      xb = popRatios[i].bx * W; yb = popRatios[i].by * H;
-      s = 0.9; 
-      o = diff <= 0.5 ? 1 : 0; 
+      sRed = sBlue = 0.85 / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      oRed = oBlue = diff <= 0.5 ? 1 : 0; 
+    } else if(gameMode === 'blinking') {
+      // Posisi terpusat mutlak
+      xr = 0; yr = 0; 
+      xb = 0; yb = 0; 
+      
+      // Logika Durasi Kemunculan Sempurna (50:50 Tanpa Jeda)
+      oRed = (localDiff >= -0.5 && localDiff < 0) ? 1 : 0;
+      oBlue = (localDiff >= 0 && localDiff < 0.5) ? 1 : 0;
+
+      // Efek Animasi "Pop Up" Eksklusif untuk Blinking
+      let pR = Math.max(0, (localDiff + 0.5) * 2); 
+      let popR = Math.min(pR * 6, 1); 
+      let easeR = 1 - Math.pow(1 - popR, 3);
+      sRed = (0.5 + (2.1 * easeR)) / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+
+      let pB = Math.max(0, localDiff * 2); 
+      let popB = Math.min(pB * 6, 1);
+      let easeB = 1 - Math.pow(1 - popB, 3);
+      sBlue = (0.5 + (2.1 * easeB)) / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
     }
 
-    redItems[i].style.transform = `translate3d(calc(-50% + ${xr}px), calc(-50% + ${yr}px), 0) scale(${s})`;
-    redItems[i].style.opacity = o;
+    redItems[i].style.transform = `translate3d(calc(-50% + ${xr}px), calc(-50% + ${yr}px), 0) scale(${sRed})`;
+    redItems[i].style.opacity = oRed;
     
-    blueItems[i].style.transform = `translate3d(calc(-50% + ${xb}px), calc(-50% + ${yb}px), 0) scale(${s})`;
-    blueItems[i].style.opacity = o;
+    blueItems[i].style.transform = `translate3d(calc(-50% + ${xb}px), calc(-50% + ${yb}px), 0) scale(${sBlue})`;
+    blueItems[i].style.opacity = oBlue;
   }
 }
 
@@ -350,18 +365,31 @@ function loop(ts) {
   rafId = requestAnimationFrame(loop);
   if(paused || bannerActive) { lastFrame = null; return; }
   if(lastFrame) {
-    const baseSpeed = speed * 1.5; 
-    // Karena jarak (span) kini universal, kecepatan efektif disamakan
-    const effectiveSpeed = (gameMode === 'chaos' || gameMode === 'up-down') ? baseSpeed * 1.5 : baseSpeed;
+    let effectiveSpeed;
+    if (gameMode === 'blinking') {
+      // Waktu total menempuh 1 siklus murni mengikuti opsi kecepatan (tanpa jeda, tanpa perlambatan)
+      effectiveSpeed = speed; 
+    } else {
+      // Perlambatan 1.5x diterapkan secara global untuk mode lain (Chaos & Up-Down)
+      const baseSpeed = speed * 1.5; 
+      effectiveSpeed = (gameMode === 'chaos' || gameMode === 'up-down') ? baseSpeed * 1.5 : baseSpeed;
+    }
     
     scrollOffset += (ts - lastFrame) / effectiveSpeed;
   }
   lastFrame = ts;
   render();
 
-  const idx = Math.floor(scrollOffset);
-  if(idx !== lastIdx && idx >= 0 && idx < N) {
-    lastIdx = idx; tone(350, 'triangle', 0.05, 0.04);
+  let currentTick;
+  if (gameMode === 'blinking') {
+    // Tick 2 kali lebih cepat (setiap pergantian warna) di mode Blinking
+    currentTick = Math.floor(scrollOffset * 2);
+  } else {
+    currentTick = Math.floor(scrollOffset);
+  }
+  
+  if(currentTick !== lastIdx && scrollOffset >= (gameMode === 'blinking' ? -0.5 : 0) && scrollOffset < N) {
+    lastIdx = currentTick; tone(350, 'triangle', 0.05, 0.04);
   }
 
   if(scrollOffset >= N - 0.4 && !bannerActive) {
@@ -370,7 +398,7 @@ function loop(ts) {
       setTimeout(() => {
         showBanner('START', 2500, () => { 
           setTimeout(() => {
-            scrollOffset = -0.5; lastIdx = -1;
+            scrollOffset = -0.5; lastIdx = -99;
             bannerActive = false; lastFrame = null;
           }, 1000); 
         });
@@ -397,7 +425,7 @@ function updateClock() {
 
 function startGame() {
   if(AC.state === 'suspended') AC.resume();
-  paused = false; elapsed = 0; scrollOffset = -0.5; lastIdx = -1;
+  paused = false; elapsed = 0; scrollOffset = -0.5; lastIdx = -99;
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('gameScreen').style.display = 'block';
