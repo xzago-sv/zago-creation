@@ -128,7 +128,15 @@ body::before {
 .logo { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,9vw,5.5rem); letter-spacing:0.3em; margin-bottom:6px; }
 .logo .r { color:#e57373; }
 .logo .b { color:#64b5f6; }
-.tagline { font-size:0.55rem; letter-spacing:0.5em; color:#222; margin-bottom:36px; text-transform: uppercase; }
+.tagline { font-size:0.55rem; letter-spacing:0.5em; color:#222; margin-bottom:24px; text-transform: uppercase; }
+
+.set-row { display:flex; gap:12px; margin-bottom:24px; }
+.set-btn {
+  background:transparent; border:1px solid #181818; border-radius:4px;
+  padding:8px 32px; color:#444; font-family:'Bebas Neue',sans-serif;
+  font-size:1.2rem; letter-spacing:0.2em; cursor:pointer; transition:all 0.2s;
+}
+.set-btn.sel { border-color:#ffd060; color:#ffd060; background:rgba(255,208,96,0.08); }
 
 .mode-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; justify-content:center; }
 .mode-btn {
@@ -198,6 +206,13 @@ body::before {
 <div id="startScreen">
   <div class="logo"><span class="r">MATH</span><span class="b">COLOR</span></div>
   <div class="tagline" id="taglineText">PILIH MODE DAN KECEPATAN</div>
+  
+  <!-- Tombol Set Pemilihan Baru -->
+  <div class="set-row">
+    <button class="set-btn sel" onclick="setQSet(this, 1)">SET 1</button>
+    <button class="set-btn" onclick="setQSet(this, 2)">SET 2</button>
+  </div>
+
   <div class="mode-row">
     <button class="mode-btn" onclick="setMode(this,'up-down')">UP - DOWN</button>
     <button class="mode-btn sel" onclick="setMode(this,'chaos')">CHAOS</button>
@@ -266,9 +281,25 @@ function tone(f,t='sine',d=0.1,v=0.1){
   o.start(); o.stop(AC.currentTime+d);
 }
 
-const RED_SEQ = ['+ \\sqrt{48400}','+ (-171)','\\times \\sqrt{49}','\\div 0,5','+ 155','\\div \\sqrt{841}','\\times (-2^{3})','\\div 4','+ (-5^{2})','\\times 6','+ (-231)','\\div 3^{3}','\\times (-12)','\\div \\sqrt{324}','\\times 2,5','\\times (-20)','+ 276','\\div 4','+ 325','\\div \\sqrt{169}','\\times 2^{3}','+ 680','\\div (-4)','\\times 2','+ 973'];
-const BLUE_SEQ = ['+ \\sqrt{67600}','\\times 3','+ (-15^{2})','\\times \\frac{1}{5}','+ (-12^{2})','+ (-415)','\\div \\sqrt{256}','\\times 0,5','+ 3^{3}','\\times 13','\\div \\sqrt{169}','+ 108','\\div \\sqrt{121}','\\times (-5^{2})','+ 779','\\div 24','\\times (-40)','\\div 10','+ 6^{2}','\\times (-0,5)','+ (-145)','\\div \\sqrt{121}','\\times 14','\\div \\frac{1}{4}','+ 1089'];
-const CORRECT_RED = 581, CORRECT_BLUE = 473, N = 25;
+// STRUKTUR DATABASE SET SOAL
+const QUESTIONS = {
+  1: {
+    RED: ['+ \\sqrt{48400}','+ (-171)','\\times \\sqrt{49}','\\div 0,5','+ 155','\\div \\sqrt{841}','\\times (-2^{3})','\\div 4','+ (-5^{2})','\\times 6','+ (-231)','\\div 3^{3}','\\times (-12)','\\div \\sqrt{324}','\\times 2,5','\\times (-20)','+ 276','\\div 4','+ 325','\\div \\sqrt{169}','\\times 2^{3}','+ 680','\\div (-4)','\\times 2','+ 973'],
+    BLUE: ['+ \\sqrt{67600}','\\times 3','+ (-15^{2})','\\times \\frac{1}{5}','+ (-12^{2})','+ (-415)','\\div \\sqrt{256}','\\times 0,5','+ 3^{3}','\\times 13','\\div \\sqrt{169}','+ 108','\\div \\sqrt{121}','\\times (-5^{2})','+ 779','\\div 24','\\times (-40)','\\div 10','+ 6^{2}','\\times (-0,5)','+ (-145)','\\div \\sqrt{121}','\\times 14','\\div \\frac{1}{4}','+ 1089'],
+    CORRECT_RED: 581,
+    CORRECT_BLUE: 473
+  },
+  2: {
+    RED: ['+ \\sqrt{57600}','\\times 3','+ (-191)','\\div \\sqrt{529}','\\times (-4)','+ 156','\\div 2^{3}','+ (-72)','\\times 12','+ 1057','\\div \\sqrt{289}','\\times (-15)','+ (-105)','\\div 15','+ 220','\\div \\sqrt{196}','\\times (-25)','\\div 14','\\times 2^{4}','\\div (-0,5)','+ (-359)','\\div \\sqrt{441}','\\times (-14)','\\times 2','+ 1265'],
+    BLUE: ['+ \\sqrt{44100}','\\div 0,25','+ (-456)','\\times \\frac{1}{8}','+ (-14^{2})','+ (-108)','\\div \\sqrt{256}','\\times 2,5','+ (-3^{3})','\\times (-10)','+ (-270)','\\div \\sqrt{400}','\\times (-5^{2})','+ 824','\\div \\sqrt{324}','\\times (-45)','\\div 15','+ 2^{5}','\\times (-0,5)','\\times 11','\\div \\sqrt{121}','\\times 36','\\div (-0,5)','\\times 0,25','+ 813'],
+    CORRECT_RED: 677,
+    CORRECT_BLUE: 615
+  }
+};
+
+const N = 25;
+let activeSet = 1;
+let currentRedSeq = [], currentBlueSeq = [], correctRedAns = 0, correctBlueAns = 0;
 
 let gameMode = 'chaos', speed = 2000, paused = false, elapsed = 0, clockInt = null;
 let scrollOffset = -0.5, lastFrame = null, animating = false, rafId = null, lastIdx = -1, bannerActive = false;
@@ -279,12 +310,14 @@ const anglesBlue = [3.0, 5.0, 1.5, 3.5, 2.0, 5.5, 4.2, 0.8, 2.8, 4.8, 1.2, 2.5, 
 
 let redItems = [], blueItems = [];
 
+function setQSet(el, id) {
+  document.querySelectorAll('.set-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); activeSet = id;
+}
 function setMode(el, m) {
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel'); gameMode = m;
   document.getElementById('taglineText').textContent = m.toUpperCase().replace('-',' ');
-  
-  // Memicu CSS kustom khusus jika mode blinking
   document.getElementById('gameScreen').className = m === 'blinking' ? 'blinking' : '';
 }
 function setSpd(el, ms) {
@@ -295,21 +328,26 @@ function setSpd(el, ms) {
 function buildStreams() {
   const rs = document.getElementById('redStream'), bs = document.getElementById('blueStream');
   rs.innerHTML = ''; bs.innerHTML = ''; redItems = []; blueItems = [];
+  
+  // Mengambil soal dari Database Set berdasarkan pilihan aktif
+  currentRedSeq = QUESTIONS[activeSet].RED;
+  currentBlueSeq = QUESTIONS[activeSet].BLUE;
+  correctRedAns = QUESTIONS[activeSet].CORRECT_RED;
+  correctBlueAns = QUESTIONS[activeSet].CORRECT_BLUE;
+
   for(let i=0; i<N; i++) {
     const r = document.createElement('div'); r.className = 'stream-item red';
-    katex.render(`{\\color{#e57373}{${RED_SEQ[i]}}}`, r);
+    katex.render(`{\\color{#e57373}{${currentRedSeq[i]}}}`, r);
     const b = document.createElement('div'); b.className = 'stream-item blue';
-    katex.render(`{\\color{#64b5f6}{${BLUE_SEQ[i]}}}`, b);
+    katex.render(`{\\color{#64b5f6}{${currentBlueSeq[i]}}}`, b);
     rs.appendChild(r); bs.appendChild(b);
     redItems.push(r); blueItems.push(b);
   }
 }
 
 function render() {
-  // Koordinat murni dibaca dari gameScreen container (Selalu 16:9 ratio)
   const container = document.getElementById('gameScreen');
   const W = container.clientWidth, H = container.clientHeight;
-  
   const universalSpan = Math.hypot(W, H) + 400; 
 
   for(let i=0; i<N; i++) {
@@ -323,33 +361,30 @@ function render() {
       yr = Math.sin(anglesRed[i]) * travelDist;
       xb = Math.cos(anglesBlue[i]) * travelDist; 
       yb = Math.sin(anglesBlue[i]) * travelDist;
-      sRed = sBlue = 0.85 / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      sRed = sBlue = 0.85 / 3; 
       oRed = oBlue = diff <= 0.5 ? 1 : 0; 
     } else if(gameMode === 'up-down') {
       const travelDist = localDiff * universalSpan; 
       xr = -W*0.22; yr = travelDist; 
       xb = W*0.22; yb = -travelDist; 
-      sRed = sBlue = 0.85 / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      sRed = sBlue = 0.85 / 3; 
       oRed = oBlue = diff <= 0.5 ? 1 : 0; 
     } else if(gameMode === 'blinking') {
-      // Posisi terpusat mutlak
       xr = 0; yr = 0; 
       xb = 0; yb = 0; 
       
-      // Logika Durasi Kemunculan Sempurna (50:50 Tanpa Jeda)
       oRed = (localDiff >= -0.5 && localDiff < 0) ? 1 : 0;
       oBlue = (localDiff >= 0 && localDiff < 0.5) ? 1 : 0;
 
-      // Efek Animasi "Pop Up" Eksklusif untuk Blinking
       let pR = Math.max(0, (localDiff + 0.5) * 2); 
       let popR = Math.min(pR * 6, 1); 
       let easeR = 1 - Math.pow(1 - popR, 3);
-      sRed = (0.5 + (2.1 * easeR)) / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      sRed = (0.5 + (2.1 * easeR)) / 3; 
 
       let pB = Math.max(0, localDiff * 2); 
       let popB = Math.min(pB * 6, 1);
       let easeB = 1 - Math.pow(1 - popB, 3);
-      sBlue = (0.5 + (2.1 * easeB)) / 3; // SKALA DOWN-SAMPLING (Dibagi 3)
+      sBlue = (0.5 + (2.1 * easeB)) / 3; 
     }
 
     redItems[i].style.transform = `translate3d(calc(-50% + ${xr}px), calc(-50% + ${yr}px), 0) scale(${sRed})`;
@@ -367,10 +402,8 @@ function loop(ts) {
   if(lastFrame) {
     let effectiveSpeed;
     if (gameMode === 'blinking') {
-      // Waktu total menempuh 1 siklus murni mengikuti opsi kecepatan (tanpa jeda, tanpa perlambatan)
       effectiveSpeed = speed; 
     } else {
-      // Perlambatan 1.5x diterapkan secara global untuk mode lain (Chaos & Up-Down)
       const baseSpeed = speed * 1.5; 
       effectiveSpeed = (gameMode === 'chaos' || gameMode === 'up-down') ? baseSpeed * 1.5 : baseSpeed;
     }
@@ -382,7 +415,6 @@ function loop(ts) {
 
   let currentTick;
   if (gameMode === 'blinking') {
-    // Tick 2 kali lebih cepat (setiap pergantian warna) di mode Blinking
     currentTick = Math.floor(scrollOffset * 2);
   } else {
     currentTick = Math.floor(scrollOffset);
@@ -465,14 +497,14 @@ function submitAnswer() {
   clearInterval(clockInt);
   document.getElementById('recallScreen').style.display = 'none';
   document.getElementById('resultScreen').style.display = 'flex';
-  const rOk = Math.abs(rVal - CORRECT_RED) < 0.1, bOk = Math.abs(bVal - CORRECT_BLUE) < 0.1;
+  const rOk = Math.abs(rVal - correctRedAns) < 0.1, bOk = Math.abs(bVal - correctBlueAns) < 0.1;
   const v = document.getElementById('verdictBig');
   v.textContent = (rOk && bOk) ? 'SEMPURNA' : 'COBA LAGI';
   v.className = 'verdict-big ' + ((rOk && bOk) ? 'win' : 'lose');
   document.getElementById('resultTime').textContent = `DURASI: ${document.getElementById('recallTimer').textContent}`;
   document.getElementById('resultCards').innerHTML = `
-    <div class="result-card"><div style="color:#e57373">MERAH</div><div class="rc-answer ${rOk?'ok':'bad'}">${rVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${CORRECT_RED}</div></div>
-    <div class="result-card"><div style="color:#64b5f6">BIRU</div><div class="rc-answer ${bOk?'ok':'bad'}">${bVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${CORRECT_BLUE}</div></div>
+    <div class="result-card"><div style="color:#e57373">MERAH</div><div class="rc-answer ${rOk?'ok':'bad'}">${rVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctRedAns}</div></div>
+    <div class="result-card"><div style="color:#64b5f6">BIRU</div><div class="rc-answer ${bOk?'ok':'bad'}">${bVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctBlueAns}</div></div>
   `;
 }
 
