@@ -211,6 +211,7 @@ body::before {
   <div class="set-row">
     <button class="set-btn sel" onclick="setQSet(this, 1)">SET 1</button>
     <button class="set-btn" onclick="setQSet(this, 2)">SET 2</button>
+    <button class="set-btn" onclick="setQSet(this, 3)">SET 3</button>
   </div>
 
   <div class="mode-row">
@@ -294,6 +295,12 @@ const QUESTIONS = {
     BLUE: ['+ \\sqrt{44100}','\\div 0,25','+ (-456)','\\times \\frac{1}{8}','+ (-14^{2})','+ (-108)','\\div \\sqrt{256}','\\times 2,5','+ (-3^{3})','\\times (-10)','+ (-270)','\\div \\sqrt{400}','\\times (-5^{2})','+ 824','\\div \\sqrt{324}','\\times (-45)','\\div 15','+ 2^{5}','\\times (-0,5)','\\times 11','\\div \\sqrt{121}','\\times 36','\\div (-0,5)','\\times 0,25','+ 813'],
     CORRECT_RED: 677,
     CORRECT_BLUE: 615
+  },
+  3: {
+    RED: ['+ \\sqrt{14400}', '\\times 3', '+ (-135)', '\\div \\sqrt{225}', '\\times (-4)', '+ 2^{4}', '\\times 0,5', '+ (-147)', '\\div \\sqrt{169}', '\\times (-5^{2})', '\\div 13', '+ (-169)', '\\div \\sqrt{144}', '\\times 2^{3}', '+ 145', '\\div \\sqrt{49}', '\\times (-30)', '+ 406', '\\div \\sqrt{196}', '\\times (-10)', '\\div 4', '\\times 2', '+ (-155)', '\\div (-0,5)', '+ 449'],
+    BLUE: ['+ \\sqrt{22500}', '\\div 0,5', '+ (-131)', '\\div \\sqrt{169}', '\\times (-5)', '+ 3^{3}', '\\times (-2)', '+ 285', '\\div \\sqrt{361}', '\\times (-10)', '\\div 10', '+ (-206)', '\\div (-15)', '\\times (-12)', '\\div 4', '+ 6^{2}', '\\times (-16)', '\\div \\sqrt{144}', '\\times (-20)', '\\div (-3)', '\\times (-4)', '\\times 0,5', '+ (-120)', '\\div (-0,5)', '+ 376'],
+    CORRECT_RED: 899,
+    CORRECT_BLUE: 936
   }
 };
 
