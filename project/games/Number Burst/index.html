@@ -81,6 +81,11 @@ body::before {
   z-index: 10;
 }
 
+/* Modifikasi Dinamis #gameScreen Khusus Blinking agar tidak memotong teks */
+#gameScreen.blinking {
+  overflow: visible !important;
+}
+
 .stream-col { position:absolute; inset:0; overflow:visible; pointer-events:none; z-index:10; }
 
 .stream-item {
@@ -112,14 +117,17 @@ body::before {
   -webkit-text-stroke: 3px currentColor; /* Stroke dikali 3 untuk ketebalan HD */
 }
 
-/* Modifikasi Dinamis Mode Blinking (Penghapusan Bingkai) */
+/* Modifikasi Dinamis Mode Blinking (Penghapusan Batasan Horizontal) */
 #gameScreen.blinking .stream-item {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
-  width: 100% !important; /* Lebarkan dimensi menyamping penuh layar */
+  width: max-content !important; /* Lebar murni mengikuti panjang angka */
+  height: auto !important; /* Hilangkan batasan tinggi */
   aspect-ratio: auto !important; /* Bebaskan batasan rasio kotak 1:1 */
+  white-space: nowrap !important; /* Pastikan tidak turun baris */
+  overflow: visible !important; /* Pastikan tidak dipotong di sisi item */
 }
 
 /* Memaksa font menjadi Putih Murni saat mode Blinking */
@@ -432,7 +440,6 @@ function render() {
       xb = 0; yb = 0; 
       
       // Ukuran Font Blinking dikalibrasi ke Batas Aman Maksimal
-      // Jauh lebih besar, tapi rumus panjang dijamin tidak terpotong
       sRed = 3.8 / 3; 
       sBlue = 3.8 / 3; 
 
