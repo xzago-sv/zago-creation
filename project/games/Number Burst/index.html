@@ -13,19 +13,35 @@
   --ukuran-bentuk: clamp(300px, 60vw, 900px); 
   --ukuran-angka: clamp(7.02rem, 13.5vw, 17.55rem); 
 
-  /* TEMA WARNA 1 (Terang / Baru) */
+  /* TEMA WARNA LVL 1 (Gelap / Sebelumnya Warna 2) */
+  --red-main: #880000;
+  --blue-main: #002266;
+  --red-bg: rgba(136, 0, 0, 0.08);
+  --blue-bg: rgba(0, 34, 102, 0.08);
+}
+
+body.theme-2 {
+  /* TEMA WARNA LVL 2 (Terang / Sebelumnya Warna 1) */
   --red-main: #e6192b;
   --blue-main: #0014e6;
   --red-bg: rgba(230, 25, 43, 0.08);
   --blue-bg: rgba(0, 20, 230, 0.08);
 }
 
-body.theme-2 {
-  /* TEMA WARNA 2 (Gelap / Sebelumnya) */
-  --red-main: #880000;
-  --blue-main: #002266;
-  --red-bg: rgba(136, 0, 0, 0.08);
-  --blue-bg: rgba(0, 34, 102, 0.08);
+body.theme-3 {
+  /* TEMA WARNA LVL 3 (Lebih Terang / RGB Murni) */
+  --red-main: #ff0000;
+  --blue-main: #0000ff;
+  --red-bg: rgba(255, 0, 0, 0.08);
+  --blue-bg: rgba(0, 0, 255, 0.08);
+}
+
+body.theme-4 {
+  /* TEMA WARNA LVL 4 (Ekstra Terang / Neon) */
+  --red-main: #ff4d4d;
+  --blue-main: #4d4dff;
+  --red-bg: rgba(255, 77, 77, 0.08);
+  --blue-bg: rgba(77, 77, 255, 0.08);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -254,8 +270,10 @@ body::before {
     
     <!-- Tombol Tema Warna -->
     <div class="col-row" style="display:flex; gap:12px; margin-bottom:0;">
-      <button class="col-btn sel" onclick="setTheme(this, 1)">WARNA 1 (TERANG)</button>
-      <button class="col-btn" onclick="setTheme(this, 2)">WARNA 2 (GELAP)</button>
+      <button class="col-btn sel" onclick="setTheme(this, 1)">LVL 1</button>
+      <button class="col-btn" onclick="setTheme(this, 2)">LVL 2</button>
+      <button class="col-btn" onclick="setTheme(this, 3)">LVL 3</button>
+      <button class="col-btn" onclick="setTheme(this, 4)">LVL 4</button>
     </div>
   </div>
 
@@ -371,7 +389,7 @@ function setQSet(el, id) {
 function setTheme(el, id) {
   el.parentElement.querySelectorAll('.col-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel'); activeTheme = id;
-  document.body.className = id === 2 ? 'theme-2' : '';
+  document.body.className = id === 1 ? '' : 'theme-' + id;
 }
 
 function setMode(el, m) {
@@ -396,8 +414,8 @@ function buildStreams() {
   correctRedAns = QUESTIONS[activeSet].CORRECT_RED;
   correctBlueAns = QUESTIONS[activeSet].CORRECT_BLUE;
 
-  const redHex = activeTheme === 1 ? '#e6192b' : '#880000';
-  const blueHex = activeTheme === 1 ? '#0014e6' : '#002266';
+  const redHex = activeTheme === 4 ? '#ff4d4d' : (activeTheme === 3 ? '#ff0000' : (activeTheme === 2 ? '#e6192b' : '#880000'));
+  const blueHex = activeTheme === 4 ? '#4d4dff' : (activeTheme === 3 ? '#0000ff' : (activeTheme === 2 ? '#0014e6' : '#002266'));
 
   for(let i=0; i<N; i++) {
     const r = document.createElement('div'); r.className = 'stream-item red';
@@ -439,9 +457,9 @@ function render() {
       xr = 0; yr = 0; 
       xb = 0; yb = 0; 
       
-      // Ukuran Font Blinking dikalibrasi ke Batas Aman Maksimal
-      sRed = 3.8 / 3; 
-      sBlue = 3.8 / 3; 
+      // Ukuran Font Blinking Dibesarkan Lebih Jauh Lagi Secara Signifikan
+      sRed = 4.5 / 3; 
+      sBlue = 4.5 / 3; 
 
       // Mengembalikan efek "Blinking" dengan memberikan jeda layar kosong (blank gap)
       // Jeda sekitar 150ms agar kedipan latar belakang dan teks sangat terasa
@@ -450,8 +468,8 @@ function render() {
       oBlue = (localDiff >= 0 && localDiff < 0.5 - gapFraction) ? 1 : 0;
 
       // Memicu perubahan warna latar belakang layar penuh yang tersinkronisasi
-      if (oRed > 0) flashColor = activeTheme === 1 ? '#e6192b' : '#880000';
-      else if (oBlue > 0) flashColor = activeTheme === 1 ? '#0014e6' : '#002266';
+      if (oRed > 0) flashColor = activeTheme === 4 ? '#ff4d4d' : (activeTheme === 3 ? '#ff0000' : (activeTheme === 2 ? '#e6192b' : '#880000'));
+      else if (oBlue > 0) flashColor = activeTheme === 4 ? '#4d4dff' : (activeTheme === 3 ? '#0000ff' : (activeTheme === 2 ? '#0014e6' : '#002266'));
     }
 
     redItems[i].style.transform = `translate3d(calc(-50% + ${xr}px), calc(-50% + ${yr}px), 0) scale(${sRed})`;
