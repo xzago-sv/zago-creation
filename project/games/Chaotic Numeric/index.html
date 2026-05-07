@@ -84,12 +84,12 @@ body::before {
 }
 
 .stream-item.red {
-  border-radius:50%; border:clamp(9px, 3vw, 18px) solid #e57373; /* Border dikali 3 */
-  background:rgba(229, 115, 115, 0.08); 
+  border-radius:50%; border:clamp(9px, 3vw, 18px) solid #880000; /* Merah Tua Terkalibrasi */
+  background:rgba(136, 0, 0, 0.08); 
 }
 .stream-item.blue {
-  border-radius:12px; border:clamp(9px, 3vw, 18px) solid #64b5f6; /* Border dikali 3 */
-  background:rgba(100, 181, 246, 0.08); 
+  border-radius:12px; border:clamp(9px, 3vw, 18px) solid #002266; /* Biru Tua Terkalibrasi */
+  background:rgba(0, 34, 102, 0.08); 
 }
 
 .stream-item .katex { 
@@ -106,10 +106,16 @@ body::before {
   padding: 0 !important;
 }
 
-.crosshair-h, .crosshair-v { position:absolute; top:50%; left:50%; background:rgba(255,255,255,0.04); pointer-events:none; z-index:9; transform:translate(-50%,-50%); }
-.crosshair-h { width: 100%; height: 1px; }
-.crosshair-v { width: 1px; height: 100%; }
-.vignette { position:absolute; inset:0; pointer-events:none; z-index:11; background:radial-gradient(circle at center, transparent 30%, rgba(8,8,8,0.9) 80%, #080808 100%); }
+/* Memaksa font menjadi Putih Murni saat mode Blinking */
+#gameScreen.blinking .stream-item .katex,
+#gameScreen.blinking .stream-item .katex * {
+  color: #ffffff !important;
+}
+
+.vignette { position:absolute; inset:0; pointer-events:none; z-index:11; background:radial-gradient(circle at center, transparent 30%, rgba(8,8,8,0.9) 80%, #080808 100%); transition: opacity 0.2s; }
+
+/* Menghilangkan Vignette agar kilatan warna layar penuh lebih maksimal */
+#gameScreen.blinking .vignette { opacity: 0; }
 
 .loop-banner {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -126,8 +132,8 @@ body::before {
 /* ── START SCREEN ── */
 #startScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:30; }
 .logo { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,9vw,5.5rem); letter-spacing:0.3em; margin-bottom:6px; }
-.logo .r { color:#e57373; }
-.logo .b { color:#64b5f6; }
+.logo .r { color:#880000; }
+.logo .b { color:#002266; }
 .tagline { font-size:0.55rem; letter-spacing:0.5em; color:#222; margin-bottom:24px; text-transform: uppercase; }
 
 .set-row { display:flex; gap:12px; margin-bottom:24px; }
@@ -172,8 +178,8 @@ body::before {
   padding:8px; font-family:'Bebas Neue',sans-serif; font-size:3.5rem;
   color:#eee; outline:none; text-align:center; width:200px;
 }
-.answer-input.red:focus { border-color:#e57373; }
-.answer-input.blue:focus { border-color:#64b5f6; }
+.answer-input.red:focus { border-color:#880000; }
+.answer-input.blue:focus { border-color:#002266; }
 .submit-btn {
   background:transparent; border:1px solid #2a2a2a; border-radius:2px;
   padding:12px 48px; color:#444; font-family:'Bebas Neue',sans-serif;
@@ -191,7 +197,7 @@ body::before {
 .result-card { border:1px solid #141414; padding:20px; text-align:center; min-width:180px; }
 .rc-answer { font-family:'Bebas Neue',sans-serif; font-size:3rem; }
 .rc-answer.ok { color:#69ff47; }
-.rc-answer.bad { color:#e57373; }
+.rc-answer.bad { color:#880000; }
 
 @keyframes bannerFade {
   0% { opacity:0; transform:translate(-50%,-50%) scale(0.8); }
@@ -221,10 +227,10 @@ body::before {
   </div>
   <div class="spd-row">
     <button class="spd sel" onclick="setSpd(this,2000)">2s</button>
-    <button class="spd" onclick="setSpd(this,2500)">2,5s</button>
     <button class="spd" onclick="setSpd(this,3000)">3s</button>
-    <button class="spd" onclick="setSpd(this,3500)">3,5s</button>
     <button class="spd" onclick="setSpd(this,4000)">4s</button>
+    <button class="spd" onclick="setSpd(this,5000)">5s</button>
+    <button class="spd" onclick="setSpd(this,6000)">6s</button>
   </div>
   <button class="start-btn" onclick="startGame()"><span>MULAI</span></button>
 </div>
@@ -240,11 +246,12 @@ body::before {
 
 <div id="pausedBanner">PAUSED</div>
 
+<!-- Latar Belakang Layar Penuh Khusus Efek Kilat (Strobe Overlay) -->
+<div id="globalFlash" style="position:fixed; inset:0; z-index:8; background:transparent; pointer-events:none; transition: background-color 0s;"></div>
+
 <div id="gameScreen">
   <div id="redStream" class="stream-col"></div>
   <div id="blueStream" class="stream-col"></div>
-  <div class="crosshair-h"></div>
-  <div class="crosshair-v"></div>
   <div class="vignette"></div>
 </div>
 
@@ -252,11 +259,11 @@ body::before {
   <div class="recall-timer" id="recallTimer">0:00</div>
   <div style="display:flex; gap:40px; margin:20px 0;">
     <div style="text-align:center">
-      <div style="color:#e57373; font-family:'Bebas Neue'; letter-spacing:0.2em; margin-bottom:10px;">MERAH</div>
+      <div style="color:#880000; font-family:'Bebas Neue'; letter-spacing:0.2em; margin-bottom:10px;">MERAH</div>
       <input class="answer-input red" type="number" id="redInput" placeholder="?">
     </div>
     <div style="text-align:center">
-      <div style="color:#64b5f6; font-family:'Bebas Neue'; letter-spacing:0.2em; margin-bottom:10px;">BIRU</div>
+      <div style="color:#002266; font-family:'Bebas Neue'; letter-spacing:0.2em; margin-bottom:10px;">BIRU</div>
       <input class="answer-input blue" type="number" id="blueInput" placeholder="?">
     </div>
   </div>
@@ -344,9 +351,9 @@ function buildStreams() {
 
   for(let i=0; i<N; i++) {
     const r = document.createElement('div'); r.className = 'stream-item red';
-    katex.render(`{\\color{#e57373}{${currentRedSeq[i]}}}`, r);
+    katex.render(`{\\color{#b71c1c}{${currentRedSeq[i]}}}`, r);
     const b = document.createElement('div'); b.className = 'stream-item blue';
-    katex.render(`{\\color{#64b5f6}{${currentBlueSeq[i]}}}`, b);
+    katex.render(`{\\color{#0d47a1}{${currentBlueSeq[i]}}}`, b);
     rs.appendChild(r); bs.appendChild(b);
     redItems.push(r); blueItems.push(b);
   }
@@ -356,6 +363,8 @@ function render() {
   const container = document.getElementById('gameScreen');
   const W = container.clientWidth, H = container.clientHeight;
   const universalSpan = Math.hypot(W, H) + 400; 
+  
+  let flashColor = 'transparent';
 
   for(let i=0; i<N; i++) {
     const diff = Math.abs(scrollOffset - i); 
@@ -392,6 +401,10 @@ function render() {
       let popB = Math.min(pB * 6, 1);
       let easeB = 1 - Math.pow(1 - popB, 3);
       sBlue = (0.5 + (2.1 * easeB)) / 3; 
+      
+      // Memicu perubahan warna latar belakang layar penuh yang tersinkronisasi
+      if (oRed > 0) flashColor = '#880000';
+      else if (oBlue > 0) flashColor = '#002266';
     }
 
     redItems[i].style.transform = `translate3d(calc(-50% + ${xr}px), calc(-50% + ${yr}px), 0) scale(${sRed})`;
@@ -400,6 +413,9 @@ function render() {
     blueItems[i].style.transform = `translate3d(calc(-50% + ${xb}px), calc(-50% + ${yb}px), 0) scale(${sBlue})`;
     blueItems[i].style.opacity = oBlue;
   }
+  
+  // Menerapkan warna ke elemen layar penuh
+  document.getElementById('globalFlash').style.backgroundColor = flashColor;
 }
 
 function loop(ts) {
@@ -493,6 +509,7 @@ function togglePause() {
 function goRecall() {
   animating = false; cancelAnimationFrame(rafId);
   document.getElementById('gameScreen').style.display = 'none';
+  document.getElementById('globalFlash').style.backgroundColor = 'transparent';
   document.getElementById('hud').style.display = 'none';
   document.getElementById('recallScreen').style.display = 'flex';
 }
@@ -510,8 +527,8 @@ function submitAnswer() {
   v.className = 'verdict-big ' + ((rOk && bOk) ? 'win' : 'lose');
   document.getElementById('resultTime').textContent = `DURASI: ${document.getElementById('recallTimer').textContent}`;
   document.getElementById('resultCards').innerHTML = `
-    <div class="result-card"><div style="color:#e57373">MERAH</div><div class="rc-answer ${rOk?'ok':'bad'}">${rVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctRedAns}</div></div>
-    <div class="result-card"><div style="color:#64b5f6">BIRU</div><div class="rc-answer ${bOk?'ok':'bad'}">${bVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctBlueAns}</div></div>
+    <div class="result-card"><div style="color:#880000">MERAH</div><div class="rc-answer ${rOk?'ok':'bad'}">${rVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctRedAns}</div></div>
+    <div class="result-card"><div style="color:#002266">BIRU</div><div class="rc-answer ${bOk?'ok':'bad'}">${bVal}</div><div style="font-size:0.6rem; color:#444">Harusnya: ${correctBlueAns}</div></div>
   `;
 }
 
@@ -519,6 +536,7 @@ function resetGame(keepStart) {
   animating = false; paused = false; clearInterval(clockInt);
   if(rafId) cancelAnimationFrame(rafId);
   ['hud','gameScreen','recallScreen','resultScreen','pausedBanner'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('globalFlash').style.backgroundColor = 'transparent';
   document.getElementById('redInput').value=''; document.getElementById('blueInput').value='';
   elapsed = 0; updateClock();
   if(keepStart) startGame(); else document.getElementById('startScreen').style.display = 'flex';
