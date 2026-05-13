@@ -13,23 +13,23 @@
   --ukuran-bentuk: clamp(300px, 60vw, 900px); 
   --ukuran-angka: clamp(7.02rem, 13.5vw, 17.55rem); 
 
-  /* TEMA WARNA 1 (Terang / Baru) */
-  --red-main: #e6192b;
-  --blue-main: #0014e6;
-  --red-bg: rgba(230, 25, 43, 0.08);
-  --blue-bg: rgba(0, 20, 230, 0.08);
-}
-
-body.theme-2 {
-  /* TEMA WARNA 2 (Gelap / Sebelumnya) */
+  /* TEMA WARNA LVL 1 (Gelap) */
   --red-main: #880000;
   --blue-main: #002266;
   --red-bg: rgba(136, 0, 0, 0.08);
   --blue-bg: rgba(0, 34, 102, 0.08);
 }
 
+body.theme-2 {
+  /* TEMA WARNA LVL 2 (Terang) */
+  --red-main: #e6192b;
+  --blue-main: #0014e6;
+  --red-bg: rgba(230, 25, 43, 0.08);
+  --blue-bg: rgba(0, 20, 230, 0.08);
+}
+
 body.theme-3 {
-  /* TEMA WARNA 3 (Lebih Terang / RGB Murni) */
+  /* TEMA WARNA LVL 3 (Lebih Terang / RGB Murni) */
   --red-main: #ff0000;
   --blue-main: #0000ff;
   --red-bg: rgba(255, 0, 0, 0.08);
@@ -37,7 +37,7 @@ body.theme-3 {
 }
 
 body.theme-4 {
-  /* TEMA WARNA 4 (Ekstra Terang / Neon) */
+  /* TEMA WARNA LVL 4 (Ekstra Terang / Neon) */
   --red-main: #ff4d4d;
   --blue-main: #4d4dff;
   --red-bg: rgba(255, 77, 77, 0.08);
@@ -72,7 +72,6 @@ body::before {
 }
 .hud-timer.ticking { color:#666; }
 .hud-controls { display:flex; gap:8px; align-items:center; margin-left:auto; }
-
 .ctrl-btn {
   background:transparent; border:1px solid #1a1a1a; border-radius:2px;
   padding:5px 14px; color:#2a2a2a;
@@ -272,7 +271,7 @@ body::before {
     </div>
     
     <!-- Tombol Tema Warna -->
-    <div class="col-row" style="display:flex; gap:12px; margin-bottom:0;">
+    <div class="col-row">
       <button class="col-btn sel" onclick="setTheme(this, 1)">LVL 1</button>
       <button class="col-btn" onclick="setTheme(this, 2)">LVL 2</button>
       <button class="col-btn" onclick="setTheme(this, 3)">LVL 3</button>
@@ -353,7 +352,7 @@ function tone(f,t='sine',d=0.1,v=0.1){
 const QUESTIONS = {
   1: {
     RED: ['+ \\sqrt{48.400}', '+ (-171)', '\\times \\sqrt{49}', '\\div 0,5', '+ 155', '\\div \\sqrt{841}', '\\times (-2^{3})', '\\div 4', '+ (-5^{2})', '\\times 6', '+ (-231)', '\\div 3^{3}', '\\times (-12)', '\\div \\sqrt{324}', '\\times 2,5', '\\times (-20)', '+ 276', '\\div 4', '+ 325', '\\div \\sqrt{169}', '\\times 2^{3}', '+ 680', '\\div (-4)', '\\times 2', '+ 973'],
-    BLUE: ['+ \\sqrt{67.600}', '\\times 3', '+ (-15^{2})', '\\times \\frac{1}{5}', '+ (-12^{2})', '+ (-415)', '\\div \\sqrt{256}', '\\times 0,5', '+ 3^{3}', '\\times 13', '\\div \\sqrt{169}', '+ 108', '\\div \\sqrt{121}', '\\times (-5^{2})', '+ 779', '\\div 24', '\\times (-40)', '\\div 10', '+ 6^{2}', '\\times (-0,5)', '+ (-145)', '\\div \\sqrt{121}', '\\times 14', '\\div \\frac{1}{4}', '+ 1.089'],
+    BLUE: ['367 - 172', '\\times 4', '+ (-15^{2})', '\\times \\frac{1}{5}', '+ (-12^{2})', '+ (-415)', '\\div \\sqrt{256}', '\\times 0,5', '+ 3^{3}', '\\times 13', '\\div \\sqrt{169}', '+ 108', '\\div \\sqrt{121}', '\\times (-5^{2})', '+ 779', '\\div 24', '\\times (-40)', '\\div 10', '+ 6^{2}', '\\times (-0,5)', '+ (-145)', '\\div \\sqrt{121}', '\\times 14', '\\div \\frac{1}{4}', '+ 1.089'],
     CORRECT_RED: 581,
     CORRECT_BLUE: 473
   },
@@ -364,9 +363,9 @@ const QUESTIONS = {
     CORRECT_BLUE: 615
   },
   3: {
-    RED: ['+ \\sqrt{14.400}', '\\times 3', '+ (-135)', '\\div \\sqrt{225}', '\\times (-4)', '+ 2^{4}', '\\times 0,5', '+ (-147)', '\\div \\sqrt{169}', '\\times (-5^{2})', '\\div 13', '+ (-169)', '\\div \\sqrt{144}', '\\times 2^{3}', '+ 145', '\\div \\sqrt{49}', '\\times (-30)', '+ 406', '\\div \\sqrt{196}', '\\times (-10)', '\\div 4', '\\times 2', '+ (-155)', '\\div (-0,5)', '+ 449'],
+    RED: ['+ \\sqrt{44.100}', '\\div 0,25', '+ (-340)', '\\times 50\\%', '+ (-15^{2})', '\\times (-14)', '+ 94', '\\div 16', '\\times 2,5', '+ (-3^{3})', '\\times (-8)', '+ (-236)', '\\div 15', '\\times (-4^{2})', '+ 644', '\\div 18', '\\times (-45)', '\\div 15', '+ 2^{5}', '+ (-122)', '\\div \\sqrt{36}', '\\times (-22)', '\\div 75\\%', '+ (-902)', '+ 1.165'],
     BLUE: ['238 - 163', '\\times \\sqrt[3]{64}', '+ (-60)', '\\div 16', '\\times (-4)', '+ 2^{4}', '\\times 0,5', '+ (-160)', '\\div 14', '\\times (-5^{2})', '\\div 13', '+ (-193)', '\\div 14', '\\times 2^{3}', '+ 299', '\\div 29', '\\times (-30)', '\\div \\frac{3}{2}', '+ 105', '\\times 2', '+ (-155)', '\\times (-0,4)', '+ (-135)', '\\div 25\\%', '+ 1.013'],
-    CORRECT_RED: 899,
+    CORRECT_RED: 967,
     CORRECT_BLUE: 833
   }
 };
@@ -460,8 +459,7 @@ function render() {
       xr = 0; yr = 0; 
       xb = 0; yb = 0; 
       
-      // Ukuran Font Blinking dikalibrasi ke Batas Aman Maksimal
-      // Jauh lebih besar, tapi rumus panjang dijamin tidak terpotong
+      // Mengembalikan Skala Font Blinking yang Lebih Terkendali dan Tidak Terpotong
       sRed = 3.8 / 3; 
       sBlue = 3.8 / 3; 
 
