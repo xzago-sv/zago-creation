@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Custom Math Icosahedron</title>
+    
+    <!-- Tailwind CSS untuk UI/UX -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js untuk Render 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls untuk interaksi mouse -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Konfigurasi MathJax (Library untuk render LaTeX ke SVG) -->
+    <script>
+        window.MathJax = {
+            options: { enableMenu: false },
+            svg: { fontCache: 'local' },
+            startup: {
+                typeset: false,
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        window.mathJaxReady = true;
+                        if(typeof allTextures !== 'undefined' && allTextures.length > 0) {
+                            for(let d=0; d<3; d++) {
+                                for(let i=0; i<20; i++) {
+                                    updateFace(d, i);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        #canvas-container { cursor: grab; touch-action: none; }
+        #canvas-container:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen font-sans">
+
+    <!-- PANEL KONTROL KIRI -->
+    <div id="left-panel" class="w-full md:w-1/3 lg:w-1/4 h-[40vh] md:h-screen bg-slate-900 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col shadow-2xl z-10 transition-all duration-300">
+        
+        <!-- Header -->
+        <div class="p-5 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-indigo-400">Math Icosahedron</h1>
+                <p class="text-xs text-slate-400 mt-1">Dadu 20-Sisi dengan Indeks & LaTeX</p>
+            </div>
+        </div>
+
+        <!-- Kontrol Kecepatan -->
+        <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+            <label class="block text-sm font-semibold text-slate-300 mb-2 flex justify-between">
+                <span>Kecepatan Putar</span>
+                <span id="speed-display" class="text-indigo-400">0.5x</span>
+            </label>
+            <input type="range" id="speed-slider" min="0" max="5" step="0.1" value="0.5" class="w-full accent-indigo-500 cursor-pointer mb-4">
+            
+            <!-- Kontrol Jumlah Dadu -->
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Ronde Icosahedron</label>
+            <div class="flex gap-2">
+                <button id="btn-dice-1" class="flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors">1</button>
+                <button id="btn-dice-2" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm font-bold shadow transition-colors">2</button>
+                <button id="btn-dice-3" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm font-bold shadow transition-colors">3</button>
+            </div>
+        </div>
+
+        <!-- Input 20 Wajah -->
+        <div class="flex-1 overflow-y-auto p-5">
+            <!-- Pilihan Dadu yang Diedit -->
+            <div class="border-b border-slate-700 mb-4 pb-3">
+                <h2 class="text-sm font-semibold text-slate-300 mb-2">Pilih Ico untuk Diedit:</h2>
+                <div class="flex gap-2">
+                    <button id="btn-edit-die-0" class="flex-1 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold shadow transition-colors">Ico 1</button>
+                    <button id="btn-edit-die-1" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors">Ico 2</button>
+                    <button id="btn-edit-die-2" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors">Ico 3</button>
+                </div>
+            </div>
+
+            <div class="border-b border-slate-700 mb-4 pb-3 flex justify-between items-start">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-300 mb-1">Variabel 20 Sisi</h2>
+                    <p class="text-[11px] text-slate-400 leading-tight">
+                        <b>Warna</b> | <b>Indeks</b> | <b>Nilai</b> (LaTeX)
+                    </p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <!-- Toggle Switch Angka -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] text-slate-400 cursor-pointer" for="toggle-value">Tampilkan Angka</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-value" class="sr-only peer" checked>
+                            <div class="w-7 h-4 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
+                        </label>
+                    </div>
+                    <!-- Toggle Switch Huruf -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] text-slate-400 cursor-pointer" for="toggle-index">Tampilkan Huruf</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-index" class="sr-only peer" checked>
+                            <div class="w-7 h-4 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
+                        </label>
+                    </div>
+                    <!-- Pemilih Warna Indeks -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] text-slate-400">Warna Indeks</label>
+                        <input type="color" id="global-index-color" value="#000000" class="w-5 h-5 shrink-0 cursor-pointer bg-slate-900 border border-slate-600 rounded p-0" title="Ubah warna semua teks indeks">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="inputs-container" class="grid grid-cols-1 gap-3">
+                <!-- Input akan di-generate via JavaScript -->
+            </div>
+            
+            <div class="mt-6 mb-2">
+                <label class="text-[10px] text-slate-400 block mb-1">Tema Palet Otomatis</label>
+                <select id="theme-selector" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-indigo-500 mb-3 transition-colors cursor-pointer">
+                    <option value="vintage">Opsi 3: Warna Tua/Vintage (Teks Putih)</option>
+                    <option value="bold">Opsi 2: Warna Tegas (Teks Putih)</option>
+                    <option value="pastel">Opsi 1: Pastel Lembut (Teks Hitam)</option>
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-number" class="py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors text-xs font-semibold shadow-lg shadow-indigo-900/50">
+                        Isi 1 - 20
+                    </button>
+                    <button id="btn-letter" class="py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors text-xs font-semibold shadow-lg shadow-blue-900/50">
+                        Isi A - T
+                    </button>
+                    <button id="btn-math" class="py-2 bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors text-xs font-semibold shadow-lg shadow-purple-900/50">
+                        Contoh Math
+                    </button>
+                    <button id="btn-random-color" class="py-2 bg-pink-600 hover:bg-pink-500 text-white rounded transition-colors text-xs font-semibold shadow-lg shadow-pink-900/50">
+                        Acak Warna
+                    </button>
+                </div>
+            </div>
+            <button id="btn-reset" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors text-sm font-semibold">
+                Reset Nilai
+            </button>
+
+            <!-- Fitur Penyimpanan Multi-Slot & Export/Import -->
+            <div class="mt-6 border-t border-slate-700 pt-4 pb-2">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-semibold text-slate-300">Simpan Konfigurasi</h3>
+                    <div class="flex gap-1">
+                        <button id="btn-export" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[10px] transition-colors" title="Export semua simpanan ke file .json">📤 Export</button>
+                        <button id="btn-import" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[10px] transition-colors" title="Import simpanan dari file .json">📥 Import</button>
+                        <input type="file" id="file-import" accept=".json" class="hidden">
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="input-save-name" placeholder="Beri nama (misal: Aljabar 1)" class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all min-w-0">
+                    <button id="btn-save" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors text-xs font-semibold shadow-lg shadow-emerald-900/50 shrink-0">
+                        💾 Simpan
+                    </button>
+                </div>
+                
+                <!-- Daftar Simpanan -->
+                <div class="mt-3">
+                    <h4 class="text-[11px] font-medium text-slate-400 mb-2 uppercase tracking-wider">Daftar Tersimpan:</h4>
+                    <ul id="saved-list" class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                        <!-- List item di-generate via JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Fitur Salin Topologi untuk AI -->
+            <div class="mt-2 border-t border-slate-700 pt-4 pb-4">
+                <h3 class="text-sm font-semibold text-slate-300 mb-1">Topologi & Geometri (Untuk AI)</h3>
+                <p class="text-[10px] text-slate-400 mb-3 leading-tight">Ekstrak struktur posisi angka, huruf, dan relasi sisi untuk di-prompt ke AI.</p>
+                
+                <div class="flex gap-2">
+                    <button id="btn-copy-topo" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors text-[11px] font-semibold shadow-lg shadow-blue-900/50 flex items-center justify-center gap-1.5" title="Salin sebagai Teks Biasa">
+                        <span>📋 Salin Teks</span>
+                    </button>
+                    <button id="btn-export-topo" class="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors text-[11px] font-semibold shadow-lg shadow-purple-900/50 flex items-center justify-center gap-1.5" title="Download file .json terstruktur khusus untuk AI">
+                        <span>🤖 Export JSON</span>
+                    </button>
+                </div>
+                
+                <p id="save-status" class="text-[11px] text-center mt-2 opacity-0 transition-opacity duration-300 font-medium"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL RENDER 3D KANAN -->
+    <div id="canvas-container" class="flex-1 w-full h-[60vh] md:h-screen relative bg-slate-950">
+        <button id="btn-toggle-panel" class="absolute top-4 left-4 z-30 p-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white rounded shadow-lg transition-colors group" title="Sembunyikan/Tampilkan Panel">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-300 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // --- KONFIGURASI AWAL ---
+        const CANVAS_CONTAINER = document.getElementById('canvas-container');
+        const INPUTS_CONTAINER = document.getElementById('inputs-container');
+        const SPEED_SLIDER = document.getElementById('speed-slider');
+        const SPEED_DISPLAY = document.getElementById('speed-display');
+        const LEFT_PANEL = document.getElementById('left-panel');
+        const BTN_TOGGLE_PANEL = document.getElementById('btn-toggle-panel');
+
+        // Parameter Warna
+        const COLOR_BG = 0x020617; // Slate 950
+        const DEFAULT_FACE_COLOR = '#4338ca'; // Indigo 700
+        const COLOR_TEXT = '#ffffff'; 
+
+        // Koleksi Tema Warna
+        const THEMES = {
+            pastel: [
+                { bg: '#FF9AA2', text: '#000000' }, { bg: '#FFB7B2', text: '#000000' },
+                { bg: '#FFDAC1', text: '#000000' }, { bg: '#E2F0CB', text: '#000000' },
+                { bg: '#B5EAD7', text: '#000000' }, { bg: '#C7CEEA', text: '#000000' },
+                { bg: '#AEC6CF', text: '#000000' }, { bg: '#FDFD96', text: '#000000' },
+                { bg: '#F49AC2', text: '#000000' }, { bg: '#CB99C9', text: '#000000' },
+                { bg: '#77DD77', text: '#000000' }, { bg: '#D2B48C', text: '#000000' },
+                { bg: '#FFB347', text: '#000000' }, { bg: '#B39EB5', text: '#000000' },
+                { bg: '#DEA5A4', text: '#000000' }, { bg: '#CFCFC4', text: '#000000' },
+                { bg: '#8FCACA', text: '#000000' }, { bg: '#F5C6A5', text: '#000000' },
+                { bg: '#B19CD9', text: '#000000' }, { bg: '#98D8D8', text: '#000000' }
+            ],
+            bold: [
+                { bg: '#E6194B', text: '#ffffff' }, { bg: '#3CB44B', text: '#ffffff' }, 
+                { bg: '#FFE119', text: '#ffffff' }, { bg: '#4363D8', text: '#ffffff' }, 
+                { bg: '#F58231', text: '#ffffff' }, { bg: '#911EB4', text: '#ffffff' }, 
+                { bg: '#42D4F4', text: '#ffffff' }, { bg: '#F032E6', text: '#ffffff' }, 
+                { bg: '#B6E812', text: '#ffffff' }, { bg: '#FABEBE', text: '#ffffff' }, 
+                { bg: '#008080', text: '#ffffff' }, { bg: '#E6BEFF', text: '#ffffff' }, 
+                { bg: '#9A6324', text: '#ffffff' }, { bg: '#FFFAC8', text: '#ffffff' }, 
+                { bg: '#800000', text: '#ffffff' }, { bg: '#AAFFC3', text: '#ffffff' }, 
+                { bg: '#808000', text: '#ffffff' }, { bg: '#FFD8B1', text: '#ffffff' }, 
+                { bg: '#000075', text: '#ffffff' }, { bg: '#A9A9A9', text: '#ffffff' }  
+            ],
+            vintage: [
+                { bg: '#8B0000', text: '#ffffff' }, // Merah Tua / Crimson
+                { bg: '#228B22', text: '#ffffff' }, // Hijau Hutan
+                { bg: '#B8860B', text: '#ffffff' }, // Emas Gelap / Mustard
+                { bg: '#000080', text: '#ffffff' }, // Biru Navy / Dongker
+                { bg: '#D2691E', text: '#ffffff' }, // Cokelat Karamel
+                { bg: '#4B0082', text: '#ffffff' }, // Ungu Plum / Indigo
+                { bg: '#008080', text: '#ffffff' }, // Teal / Hijau Kebiruan Gelap
+                { bg: '#8B008B', text: '#ffffff' }, // Magenta Tua
+                { bg: '#556B2F', text: '#ffffff' }, // Hijau Zaitun Gelap
+                { bg: '#A0522D', text: '#ffffff' }, // Cokelat Sienna
+                { bg: '#4682B4', text: '#ffffff' }, // Biru Baja
+                { bg: '#9932CC', text: '#ffffff' }, // Ungu Anggrek Gelap
+                { bg: '#8B4513', text: '#ffffff' }, // Cokelat Pelana
+                { bg: '#2F4F4F', text: '#ffffff' }, // Abu-abu Sabak Gelap
+                { bg: '#CD5C5C', text: '#ffffff' }, // Merah Pudar / Indian Red
+                { bg: '#008B8B', text: '#ffffff' }, // Cyan Gelap
+                { bg: '#6B8E23', text: '#ffffff' }, // Hijau Lumut
+                { bg: '#483D8B', text: '#ffffff' }, // Biru Sabak Tua
+                { bg: '#B22222', text: '#ffffff' }, // Merah Bata
+                { bg: '#191970', text: '#ffffff' }  // Biru Tengah Malam
+            ]
+        };
+
+        let currentTheme = 'vintage'; 
+        let memoryCorePalette = [...THEMES[currentTheme]];
+
+        let globalIndexColor = '#000000'; // Warna indeks dikunci hitam
+        let showIndex = true; 
+        let showValue = true; // Status tampil/sembunyi angka
+
+        // Variabel Global Three.js
+        let scene, camera, renderer, controls;
+        let icosahedrons = []; 
+        let manualRotations = new Map(); // Untuk interaksi sentuh mandiri
+        
+        let allMaterials = [[], [], []];
+        let allTextures = [[], [], []];
+        let sharedGeometry, sharedEdgesGeometry, sharedEdgesMaterial;
+        
+        let diceCount = 1; 
+        let activeEditDie = 0; 
+        
+        let speedMultiplier = 0.5;
+        let baseRotationSpeed = { x: 0.005, y: 0.008, z: 0.003 };
+
+        // Data Preset untuk Tiap Ronde Icosahedron sesuai parameter instruksi
+        const R1_I1 = ["13", "34", "7", "41", "26", "11", "39", "17", "46", "23", "19", "31", "14", "43", "6", "29", "3", "47", "37", "21"];
+        const R2_I1 = ["11", "26", "8", "41", "22", "17", "34", "19", "45", "25", "14", "33", "7", "48", "5", "29", "4", "38", "31", "21"];
+        const R2_I2 = ["15", "30", "10", "31", "37", "41", "19", "28", "3", "50", "23", "6", "42", "12", "25", "13", "26", "38", "16", "47"];
+        const EMPTY_20 = Array(20).fill("");
+
+        // Matriks struktur memori permainan
+        const roundPresets = {
+            1: [R1_I1, EMPTY_20, EMPTY_20],
+            2: [R2_I1, R2_I2, EMPTY_20],
+            3: [EMPTY_20, EMPTY_20, EMPTY_20] // Ronde 3 tetap blank slate (papan kosong)
+        };
+
+        // Inisialisasi awal menggunakan data Ronde 1
+        let allFaceData = Array.from({length: 3}, (_, d) => 
+            Array.from({length: 20}, (_, i) => ({ 
+                label: String.fromCharCode(65 + i),
+                value: roundPresets[1][d][i], // Load angka utama sesuai ronde
+                color: memoryCorePalette[i].bg,
+                textColor: '#ffffff' 
+            }))
+        );
+
+        let faceAdjacency = Array.from({length: 20}, () => []);
+
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0, g:0, b:0};
+        }
+
+        function colorDistance(hex1, hex2) {
+            let c1 = hexToRgb(hex1);
+            let c2 = hexToRgb(hex2);
+            let rmean = (c1.r + c2.r) / 2;
+            let r = c1.r - c2.r;
+            let g = c1.g - c2.g;
+            let b = c1.b - c2.b;
+            return Math.sqrt( (2 + rmean/256) * (r*r) + 4*(g*g) + (2 + (255-rmean)/256) * (b*b) );
+        }
+
+        function generateSmartPalette() {
+            let bestPalette = [];
+            let maxMinDistance = 0; 
+            for (let attempt = 0; attempt < 3000; attempt++) {
+                let shuffled = [...memoryCorePalette];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                
+                let localMinDistance = 9999;
+                for (let i = 0; i < 20; i++) {
+                    for (let neighbor of faceAdjacency[i]) {
+                        if (neighbor > i) { 
+                            let dist = colorDistance(shuffled[i].bg, shuffled[neighbor].bg);
+                            if (dist < localMinDistance) {
+                                localMinDistance = dist;
+                            }
+                        }
+                    }
+                }
+                if (localMinDistance > maxMinDistance) {
+                    maxMinDistance = localMinDistance;
+                    bestPalette = [...shuffled];
+                }
+                if (maxMinDistance > 120) break;
+            }
+            return bestPalette;
+        }
+
+        // --- INISIALISASI THREE.JS ---
+        function init3D() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(COLOR_BG);
+            
+            const aspect = CANVAS_CONTAINER.clientWidth / CANVAS_CONTAINER.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.z = 15;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(CANVAS_CONTAINER.clientWidth, CANVAS_CONTAINER.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            CANVAS_CONTAINER.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight1.position.set(10, 10, 10);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x818cf8, 0.5);
+            dirLight2.position.set(-10, -10, -10);
+            scene.add(dirLight2);
+
+            const radius = 5;
+            const baseGeometry = new THREE.IcosahedronGeometry(radius, 0);
+            
+            sharedEdgesGeometry = new THREE.EdgesGeometry(baseGeometry);
+            sharedEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
+
+            sharedGeometry = baseGeometry.clone().toNonIndexed();
+            
+            const uvAttribute = sharedGeometry.attributes.uv;
+            for (let i = 0; i < 20; i++) {
+                uvAttribute.setXY(i * 3 + 0, 0, 0);       
+                uvAttribute.setXY(i * 3 + 1, 1, 0);       
+                uvAttribute.setXY(i * 3 + 2, 0.5, 1);     
+                sharedGeometry.addGroup(i * 3, 3, i);
+            }
+            uvAttribute.needsUpdate = true;
+
+            const position = sharedGeometry.attributes.position;
+            const isSameVertex = (i, j) => {
+                return Math.abs(position.getX(i) - position.getX(j)) < 0.001 &&
+                       Math.abs(position.getY(i) - position.getY(j)) < 0.001 &&
+                       Math.abs(position.getZ(i) - position.getZ(j)) < 0.001;
+            };
+            for(let f1=0; f1<20; f1++) {
+                for(let f2=f1+1; f2<20; f2++) {
+                    let sharedVertices = 0;
+                    for(let v1=0; v1<3; v1++) {
+                        for(let v2=0; v2<3; v2++) {
+                            if (isSameVertex(f1*3 + v1, f2*3 + v2)) sharedVertices++;
+                        }
+                    }
+                    if (sharedVertices === 2) {
+                        faceAdjacency[f1].push(f2);
+                        faceAdjacency[f2].push(f1);
+                    }
+                }
+            }
+
+            for (let d = 0; d < 3; d++) {
+                let smartPalette = generateSmartPalette();
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[d][i].color = smartPalette[i].bg;
+                    allFaceData[d][i].textColor = '#ffffff';
+                }
+            }
+
+            for (let d = 0; d < 3; d++) {
+                for (let i = 0; i < 20; i++) {
+                    const matData = createBlankMaterial();
+                    allTextures[d].push({ canvas: matData.canvas, ctx: matData.ctx, texture: matData.texture });
+                    allMaterials[d].push(matData.material);
+                }
+            }
+
+            updateDiceDisplay();
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // KUNCI KAMERA TOTAL: Mencegah user merusak posisi icosahedron
+            controls.enableZoom = false;   // Tidak bisa di-zoom in/out
+            controls.enableRotate = false; // Tidak bisa memutar sudut pandang ruang
+            controls.enablePan = false;    // Tidak bisa menggeser letak ruang
+            controls.autoRotate = false;
+
+            setupRaycaster();
+
+            window.addEventListener('resize', onWindowResize, false);
+            for (let d = 0; d < 3; d++) {
+                for (let i = 0; i < 20; i++) {
+                    updateFace(d, i);
+                }
+            }
+        }
+
+        function setupRaycaster() {
+            const raycaster = new THREE.Raycaster();
+            const pointer = new THREE.Vector2();
+
+            CANVAS_CONTAINER.addEventListener('pointerdown', (e) => {
+                const rect = CANVAS_CONTAINER.getBoundingClientRect();
+                pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(pointer, camera);
+                const intersects = raycaster.intersectObjects(icosahedrons);
+
+                if (intersects.length > 0) {
+                    const mesh = intersects[0].object;
+                    manualRotations.set(e.pointerId, {
+                        mesh: mesh,
+                        lastX: e.clientX,
+                        lastY: e.clientY
+                    });
+                }
+                // Karena kamera dikunci, kita tidak perlu memulihkan OrbitControls saat user tap area kosong
+            });
+
+            CANVAS_CONTAINER.addEventListener('pointermove', (e) => {
+                if (manualRotations.has(e.pointerId)) {
+                    const dragData = manualRotations.get(e.pointerId);
+                    const deltaX = e.clientX - dragData.lastX;
+                    const deltaY = e.clientY - dragData.lastY;
+
+                    dragData.mesh.rotation.y += deltaX * 0.01;
+                    dragData.mesh.rotation.x += deltaY * 0.01;
+
+                    dragData.lastX = e.clientX;
+                    dragData.lastY = e.clientY;
+                }
+            });
+
+            const endPointer = (e) => {
+                manualRotations.delete(e.pointerId);
+            };
+            CANVAS_CONTAINER.addEventListener('pointerup', endPointer);
+            CANVAS_CONTAINER.addEventListener('pointercancel', endPointer);
+        }
+
+        function updateDiceDisplay() {
+            icosahedrons.forEach(die => scene.remove(die));
+            icosahedrons = [];
+            const positions = [];
+            
+            if (diceCount === 1) {
+                positions.push({ x: 0, y: 0, z: 0 });
+                camera.position.z = 15;
+            } else if (diceCount === 2) {
+                positions.push({ x: -6, y: 0, z: 0 });
+                positions.push({ x: 6, y: 0, z: 0 });
+                camera.position.z = 20;
+            } else if (diceCount === 3) {
+                positions.push({ x: -12, y: 0, z: 0 });
+                positions.push({ x: 0, y: 0, z: 0 });
+                positions.push({ x: 12, y: 0, z: 0 });
+                camera.position.z = 28;
+            }
+
+            positions.forEach((pos, index) => {
+                const mesh = new THREE.Mesh(sharedGeometry, allMaterials[index]);
+                const edges = new THREE.LineSegments(sharedEdgesGeometry, sharedEdgesMaterial);
+                mesh.add(edges);
+                mesh.position.set(pos.x, pos.y, pos.z);
+                mesh.rotation.set(Math.random() * Math.PI*2, Math.random() * Math.PI*2, Math.random() * Math.PI*2);
+                scene.add(mesh);
+                icosahedrons.push(mesh);
+            });
+            camera.updateProjectionMatrix();
+        }
+
+        function createBlankMaterial() {
+            const canvasSize = 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            const ctx = canvas.getContext('2d');
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+            return { canvas, ctx, texture, material };
+        }
+
+        function updateFace(dieIndex, faceIndex) {
+            const data = allFaceData[dieIndex][faceIndex];
+            const canvasData = allTextures[dieIndex][faceIndex];
+            if(!canvasData) return;
+            
+            const size = canvasData.canvas.width;
+            const ctx = canvasData.ctx;
+            const text = data.value;
+            const labelText = data.label;
+            const bgColor = data.color;
+            const faceTextColor = data.textColor || COLOR_TEXT;
+            const indexColor = globalIndexColor; 
+
+            const renderFinal = (imgElement, isFallback) => {
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, size, size);
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                if (showIndex && labelText) {
+                    ctx.fillStyle = indexColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    let labelSize = size * 0.12; 
+                    if(labelText.length > 2) labelSize = size * 0.08;
+                    ctx.font = `bold ${labelSize}px Arial, sans-serif`;
+
+                    const rotAngle = Math.atan2(3, -2);
+
+                    ctx.fillText(labelText, size * 0.5, size * 0.20);
+
+                    ctx.save();
+                    ctx.translate(size * 0.15, size * 0.90);
+                    ctx.rotate(-rotAngle); 
+                    ctx.fillText(labelText, 0, 0);
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.translate(size * 0.85, size * 0.90);
+                    ctx.rotate(rotAngle); 
+                    ctx.fillText(labelText, 0, 0);
+                    ctx.restore();
+                }
+
+                // 3. Gambar Nilai/Matematika di bagian tengah bawah
+                if (showValue && text && text.trim() !== "") {
+                    const mathY = size * 0.65; 
+                    const textTrimmed = text.trim();
+                    const isExact6or9 = textTrimmed === '6' || textTrimmed === '9';
+
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 1;
+
+                    if (isFallback || !imgElement) {
+                        ctx.fillStyle = faceTextColor;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        let fontSize = 120;
+                        if (text.length > 2) fontSize = 80;
+                        if (text.length > 4) fontSize = 55;
+                        if (text.length > 6) fontSize = 35;
+
+                        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+                        ctx.fillText(text, size / 2, mathY);
+
+                        if (isExact6or9) {
+                            const textWidth = ctx.measureText(text).width;
+                            const lineY = mathY + fontSize * 0.35;
+                            ctx.beginPath();
+                            ctx.moveTo((size - textWidth) / 2, lineY);
+                            ctx.lineTo((size + textWidth) / 2, lineY);
+                            ctx.lineWidth = fontSize * 0.08;
+                            ctx.strokeStyle = faceTextColor;
+                            ctx.stroke();
+                        }
+                    } else {
+                        const pxWidth = imgElement.customWidth;
+                        const pxHeight = imgElement.customHeight;
+                        ctx.drawImage(imgElement, (size - pxWidth) / 2, mathY - pxHeight / 2, pxWidth, pxHeight);
+
+                        if (isExact6or9) {
+                            const lineY = mathY + pxHeight / 2 + size * 0.02;
+                            ctx.beginPath();
+                            ctx.moveTo((size - pxWidth) / 2, lineY);
+                            ctx.lineTo((size + pxWidth) / 2, lineY);
+                            ctx.lineWidth = Math.max(pxHeight * 0.06, 3);
+                            ctx.strokeStyle = faceTextColor;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                canvasData.texture.needsUpdate = true;
+            };
+
+            if (!text || text.trim() === "") {
+                renderFinal(null, true);
+                return;
+            }
+
+            if (window.mathJaxReady) {
+                window.MathJax.tex2svgPromise(text, {display: true}).then((node) => {
+                    const svg = node.querySelector('svg');
+                    if (!svg) { renderFinal(null, true); return; }
+                    
+                    const viewBox = svg.getAttribute('viewBox').split(' ');
+                    const vbWidth = parseFloat(viewBox[2]);
+                    const vbHeight = parseFloat(viewBox[3]);
+                    let pxWidth = vbWidth * 0.12;
+                    let pxHeight = vbHeight * 0.12;
+
+                    const scale = Math.min(1, (size * 0.60) / pxWidth, (size * 0.40) / pxHeight);
+                    pxWidth *= scale;
+                    pxHeight *= scale;
+
+                    svg.setAttribute('width', pxWidth + 'px');
+                    svg.setAttribute('height', pxHeight + 'px');
+                    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+                    let svgString = new XMLSerializer().serializeToString(svg);
+                    svgString = svgString.replace(/currentColor/g, COLOR_TEXT); 
+
+                    const img = new Image();
+                    img.customWidth = pxWidth;
+                    img.customHeight = pxHeight;
+                    img.onload = () => { renderFinal(img, false); };
+                    img.onerror = () => { renderFinal(null, true); };
+                    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+                }).catch(() => renderFinal(null, true));
+            } else {
+                renderFinal(null, true);
+            }
+        }
+
+        // --- PEMBANGUNAN UI INPUT ---
+        function initUI() {
+            BTN_TOGGLE_PANEL.addEventListener('click', () => {
+                LEFT_PANEL.classList.toggle('hidden');
+                setTimeout(onWindowResize, 10);
+            });
+
+            const setDiceCount = (count, loadPreset = true) => {
+                diceCount = count;
+                [1, 2, 3].forEach(num => {
+                    const btn = document.getElementById(`btn-dice-${num}`);
+                    if (num === count) btn.className = "flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors";
+                    else btn.className = "flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm font-bold shadow transition-colors";
+                });
+
+                // Load angka spesifik dari preset jika User berpindah Ronde (bukan saat load file save)
+                if (loadPreset) {
+                    for (let d = 0; d < 3; d++) {
+                        for (let i = 0; i < 20; i++) {
+                            allFaceData[d][i].value = roundPresets[count][d][i];
+                        }
+                    }
+                    // Update UI input di panel kiri untuk Ico yang sedang diedit
+                    for (let i = 0; i < 20; i++) {
+                        const inputElem = document.getElementById(`input-face-${i}`);
+                        if (inputElem) inputElem.value = allFaceData[activeEditDie][i].value;
+                    }
+                    // Render ulang tekstur seluruh canvas
+                    for (let d = 0; d < 3; d++) {
+                        for (let i = 0; i < 20; i++) updateFace(d, i);
+                    }
+                }
+
+                updateDiceDisplay();
+            };
+            document.getElementById('btn-dice-1').addEventListener('click', () => setDiceCount(1));
+            document.getElementById('btn-dice-2').addEventListener('click', () => setDiceCount(2));
+            document.getElementById('btn-dice-3').addEventListener('click', () => setDiceCount(3));
+
+            const setActiveEditDie = (index) => {
+                activeEditDie = index;
+                [0, 1, 2].forEach(num => {
+                    const btn = document.getElementById(`btn-edit-die-${num}`);
+                    if (num === index) btn.className = "flex-1 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold shadow transition-colors";
+                    else btn.className = "flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors";
+                });
+                for (let i = 0; i < 20; i++) {
+                    document.getElementById(`input-color-${i}`).value = allFaceData[activeEditDie][i].color;
+                    document.getElementById(`input-label-${i}`).value = allFaceData[activeEditDie][i].label;
+                    document.getElementById(`input-face-${i}`).value = allFaceData[activeEditDie][i].value;
+                }
+            };
+            document.getElementById('btn-edit-die-0').addEventListener('click', () => setActiveEditDie(0));
+            document.getElementById('btn-edit-die-1').addEventListener('click', () => setActiveEditDie(1));
+            document.getElementById('btn-edit-die-2').addEventListener('click', () => setActiveEditDie(2));
+
+            document.getElementById('toggle-index').addEventListener('change', (e) => {
+                showIndex = e.target.checked;
+                for (let d = 0; d < 3; d++) for (let i = 0; i < 20; i++) updateFace(d, i);
+            });
+
+            document.getElementById('toggle-value').addEventListener('change', (e) => {
+                showValue = e.target.checked;
+                for (let d = 0; d < 3; d++) for (let i = 0; i < 20; i++) updateFace(d, i);
+            });
+
+            document.getElementById('global-index-color').addEventListener('input', (e) => {
+                globalIndexColor = e.target.value;
+                for (let d = 0; d < 3; d++) for (let i = 0; i < 20; i++) updateFace(d, i);
+            });
+
+            for (let i = 0; i < 20; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex gap-2 items-center bg-slate-800/50 p-2 rounded border border-slate-700";
+                
+                const inputColor = document.createElement('input');
+                inputColor.type = "color";
+                inputColor.id = `input-color-${i}`;
+                inputColor.className = "w-8 h-8 shrink-0 cursor-pointer bg-slate-900 border border-slate-600 rounded p-0";
+                inputColor.value = allFaceData[activeEditDie][i].color;
+                
+                const inputLabel = document.createElement('input');
+                inputLabel.type = "text";
+                inputLabel.id = `input-label-${i}`;
+                inputLabel.className = "w-10 md:w-12 shrink-0 bg-slate-900 border border-slate-600 rounded px-1 py-1.5 text-sm font-bold text-center text-slate-300 focus:outline-none focus:border-indigo-500 transition-all";
+                inputLabel.value = allFaceData[activeEditDie][i].label;
+                
+                const inputValue = document.createElement('input');
+                inputValue.type = "text";
+                inputValue.id = `input-face-${i}`;
+                inputValue.className = "flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-w-0";
+                inputValue.value = allFaceData[activeEditDie][i].value;
+                
+                inputColor.addEventListener('input', (e) => { allFaceData[activeEditDie][i].color = e.target.value; updateFace(activeEditDie, i); });
+                inputLabel.addEventListener('input', (e) => { allFaceData[activeEditDie][i].label = e.target.value; updateFace(activeEditDie, i); });
+                inputValue.addEventListener('input', (e) => { allFaceData[activeEditDie][i].value = e.target.value; updateFace(activeEditDie, i); });
+
+                wrapper.append(inputColor, inputLabel, inputValue);
+                INPUTS_CONTAINER.appendChild(wrapper);
+            }
+
+            SPEED_SLIDER.addEventListener('input', (e) => {
+                speedMultiplier = parseFloat(e.target.value);
+                SPEED_DISPLAY.innerText = speedMultiplier.toFixed(1) + "x";
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[activeEditDie][i].value = "";
+                    document.getElementById(`input-face-${i}`).value = "";
+                    updateFace(activeEditDie, i);
+                }
+            });
+
+            document.getElementById('btn-number').addEventListener('click', () => {
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[activeEditDie][i].value = (i + 1).toString();
+                    document.getElementById(`input-face-${i}`).value = allFaceData[activeEditDie][i].value;
+                    updateFace(activeEditDie, i);
+                }
+            });
+
+            document.getElementById('btn-letter').addEventListener('click', () => {
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[activeEditDie][i].value = String.fromCharCode(65 + i);
+                    document.getElementById(`input-face-${i}`).value = allFaceData[activeEditDie][i].value;
+                    updateFace(activeEditDie, i);
+                }
+            });
+
+            document.getElementById('theme-selector').addEventListener('change', (e) => {
+                currentTheme = e.target.value;
+                memoryCorePalette = [...THEMES[currentTheme]];
+                globalIndexColor = '#000000';
+                document.getElementById('global-index-color').value = globalIndexColor;
+
+                for (let d = 0; d < 3; d++) {
+                    let smartPalette = generateSmartPalette();
+                    for (let i = 0; i < 20; i++) {
+                        allFaceData[d][i].color = smartPalette[i].bg;
+                        allFaceData[d][i].textColor = '#ffffff'; 
+                        if (d === activeEditDie) {
+                            document.getElementById(`input-color-${i}`).value = smartPalette[i].bg;
+                        }
+                        updateFace(d, i);
+                    }
+                }
+            });
+
+            document.getElementById('btn-random-color').addEventListener('click', () => {
+                let smartPalette = generateSmartPalette();
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[activeEditDie][i].color = smartPalette[i].bg;
+                    allFaceData[activeEditDie][i].textColor = '#ffffff';
+                    document.getElementById(`input-color-${i}`).value = smartPalette[i].bg;
+                    updateFace(activeEditDie, i);
+                }
+            });
+
+            document.getElementById('btn-math').addEventListener('click', () => {
+                const mathExamples = ["200", "\\sqrt{64}", "\\frac{1}{2}", "x^2", "y=mx+c", "\\pi", "\\alpha", "\\beta", "A=\\pi r^2", "E=mc^2", "\\sum_{n=1}^{10}", "\\infty", "a^2+b^2=c^2", "50\\%", "\\int x dx", "1 \\frac{1}{2}", "\\frac{x}{y}", "x \\pm 1", "\\Delta", "10^3"];
+                for (let i = 0; i < 20; i++) {
+                    allFaceData[activeEditDie][i].value = mathExamples[i];
+                    document.getElementById(`input-face-${i}`).value = allFaceData[activeEditDie][i].value;
+                    updateFace(activeEditDie, i);
+                }
+            });
+
+            // LOGIKA LOCAL STORAGE & EXPORT IMPORT
+            const SAVE_KEY = 'mathIcosahedronSaves_v3';
+            const statusText = document.getElementById('save-status');
+            const inputSaveName = document.getElementById('input-save-name');
+            const savedList = document.getElementById('saved-list');
+
+            function showStatus(msg, colorClass) {
+                statusText.innerText = msg;
+                statusText.className = `text-[11px] text-center mt-2 ${colorClass} opacity-100 transition-opacity duration-300 font-medium`;
+                setTimeout(() => { statusText.classList.remove('opacity-100'); statusText.classList.add('opacity-0'); }, 3000);
+            }
+            function getSaves() { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+
+            function renderSaveList() {
+                const saves = getSaves();
+                savedList.innerHTML = '';
+                const names = Object.keys(saves);
+                if (names.length === 0) {
+                    savedList.innerHTML = '<li class="text-[11px] text-slate-500 text-center italic py-2">Belum ada data tersimpan</li>';
+                    return;
+                }
+                names.forEach(name => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700 hover:border-slate-500 transition-colors group";
+                    const nameBtn = document.createElement('button');
+                    nameBtn.className = "flex-1 text-left text-xs text-slate-300 group-hover:text-white font-medium truncate mr-2 px-1";
+                    nameBtn.innerText = name;
+                    nameBtn.onclick = () => loadData(name);
+                    const delBtn = document.createElement('button');
+                    delBtn.className = "text-slate-500 hover:text-red-400 p-1 rounded transition-colors text-xs bg-slate-900/50 hover:bg-slate-900";
+                    delBtn.innerHTML = "🗑️";
+                    delBtn.onclick = () => {
+                        const saves = getSaves(); delete saves[name];
+                        localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+                        renderSaveList(); showStatus(`🗑️ "${name}" dihapus.`, "text-red-400");
+                    };
+                    li.append(nameBtn, delBtn); savedList.appendChild(li);
+                });
+            }
+
+            function saveCurrentData() {
+                const name = inputSaveName.value.trim();
+                if (!name) return showStatus("⚠️ Masukkan nama!", "text-amber-400");
+                const saves = getSaves();
+                saves[name] = { allFaces: allFaceData, indexColor: globalIndexColor, showIndex, showValue, diceCount };
+                localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+                inputSaveName.value = ''; renderSaveList();
+                showStatus(`✅ "${name}" disimpan!`, "text-emerald-400");
+            }
+
+            function loadData(name) {
+                const saves = getSaves();
+                if (saves[name]) {
+                    const sd = saves[name];
+                    globalIndexColor = sd.indexColor || '#000000';
+                    document.getElementById('global-index-color').value = globalIndexColor;
+                    
+                    showIndex = sd.showIndex !== false; 
+                    document.getElementById('toggle-index').checked = showIndex;
+                    
+                    showValue = sd.showValue !== false; 
+                    document.getElementById('toggle-value').checked = showValue;
+
+                    // Load jumlah Ico (false = jangan timpa nilai save ini dengan array preset ronde bawaan)
+                    if (sd.diceCount) setDiceCount(sd.diceCount, false); 
+                    
+                    if (sd.allFaces) allFaceData = JSON.parse(JSON.stringify(sd.allFaces));
+                    setActiveEditDie(0);
+                    for (let d = 0; d < 3; d++) for (let i = 0; i < 20; i++) updateFace(d, i);
+                    showStatus(`📂 "${name}" dimuat.`, "text-indigo-400");
+                }
+            }
+
+            document.getElementById('btn-save').addEventListener('click', saveCurrentData);
+            
+            document.getElementById('btn-export').addEventListener('click', () => {
+                const data = localStorage.getItem(SAVE_KEY);
+                if (!data || data === '{}') return showStatus("Kosong!", "text-amber-400");
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'math_icosahedron_presets.json'; a.click();
+            });
+
+            document.getElementById('btn-import').addEventListener('click', () => document.getElementById('file-import').click());
+            document.getElementById('file-import').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const imported = JSON.parse(ev.target.result);
+                        const current = getSaves();
+                        localStorage.setItem(SAVE_KEY, JSON.stringify({...current, ...imported}));
+                        renderSaveList(); showStatus("📥 Berhasil Import!", "text-emerald-400");
+                    } catch(err) { showStatus("❌ File tidak valid", "text-red-400"); }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            });
+
+            // TOMBOL SALIN DATA TOPOLOGI UNTUK AI
+            document.getElementById('btn-copy-topo').addEventListener('click', () => {
+                let text = "=== DATA TOPOLOGI & GEOMETRI ICOSAHEDRON ===\n\n";
+                text += "1. STRUKTUR FISIK\n";
+                text += "- Bentuk Geometri: Icosahedron 3D (terdiri dari 20 sisi segitiga sama sisi).\n";
+                text += "- Letak Indeks Huruf (A-T): Tercetak di ketiga ujung/sudut pada masing-masing sisi segitiga.\n";
+                text += "- Letak Nilai/Angka: Tercetak di titik tengah dari masing-masing sisi segitiga.\n\n";
+
+                text += "2. RELASI SISI BERSEBELAHAN (ADJACENCY MAP)\n";
+                text += "Penting untuk logika spasial: Berikut adalah daftar sisi mana saja yang saling menempel langsung (berbagi rusuk/garis tepi):\n";
+                if(faceAdjacency.length > 0) {
+                    for(let i=0; i<20; i++) {
+                        let letter = String.fromCharCode(65 + i);
+                        let neighbors = faceAdjacency[i].map(n => String.fromCharCode(65 + n)).join(", ");
+                        text += `Sisi [${letter}] menempel dengan -> [${neighbors}]\n`;
+                    }
+                } else {
+                    text += "(Data belum termuat penuh, coba beberapa detik lagi)\n";
+                }
+                text += "\n";
+
+                text += "3. PEMETAAN ANGKA PER RONDE\n";
+                for(let r=1; r<=3; r++) {
+                    text += `--- RONDE ${r} ---\n`;
+                    for(let d=0; d<3; d++) {
+                        let isEmpty = roundPresets[r][d].every(v => v === "");
+                        if(!isEmpty) {
+                            text += `>> ICOSAHEDRON ${d+1}:\n`;
+                            let pairs = [];
+                            for(let i=0; i<20; i++) {
+                                let letter = String.fromCharCode(65 + i);
+                                let val = roundPresets[r][d][i];
+                                if (val !== "") pairs.push(`[${letter}=${val}]`);
+                            }
+                            text += pairs.join(" | ") + "\n\n";
+                        } else if (d===0 && isEmpty) {
+                            text += ">> KOSONG (Belum ada angka yang diset)\n\n";
+                            break; // Skip dadu 2 dan 3 jika dadu 1 saja kosong
+                        }
+                    }
+                }
+
+                // Menyalin menggunakan fallback execCommand untuk kompatibilitas iframe
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed'; 
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showStatus("✅ Teks Topologi disalin!", "text-blue-400");
+                } catch (err) {
+                    showStatus("❌ Gagal menyalin teks.", "text-red-400");
+                }
+                document.body.removeChild(textarea);
+            });
+
+            // TOMBOL EXPORT JSON KHUSUS UNTUK AI
+            document.getElementById('btn-export-topo').addEventListener('click', () => {
+                if(faceAdjacency.length === 0) {
+                    showStatus("⏳ Tunggu loading selesai", "text-amber-400");
+                    return;
+                }
+
+                // Bangun struktur JSON yang ramah Machine-Learning (AI)
+                const topoJSON = {
+                    metadata: {
+                        deskripsi: "Topologi Geometri Memory Game (Math Icosahedron)",
+                        bentuk_3d: "Icosahedron",
+                        jumlah_sisi: 20,
+                        panduan_ai: "Gunakan 'adjacency_map' untuk mengetahui sisi mana yang saling bersentuhan secara geometri (pathfinding/rotasi). Gunakan 'data_ronde' untuk mengetahui isi angka pada tiap huruf A-T."
+                    },
+                    adjacency_map: [],
+                    data_ronde: []
+                };
+
+                // Petakan Adjacency
+                for(let i = 0; i < 20; i++) {
+                    let letter = String.fromCharCode(65 + i);
+                    let neighbors = faceAdjacency[i].map(n => String.fromCharCode(65 + n));
+                    topoJSON.adjacency_map.push({
+                        sisi_huruf: letter,
+                        bersebelahan_langsung_dengan: neighbors
+                    });
+                }
+
+                // Petakan Isi per Ronde
+                for(let r = 1; r <= 3; r++) {
+                    let roundObj = { nomor_ronde: r, icosahedrons: [] };
+                    for(let d = 0; d < 3; d++) {
+                        let isEmpty = roundPresets[r][d].every(v => v === "");
+                        if(!isEmpty) {
+                            let icoObj = { id_dadu: `Ico_${d+1}`, isi_sisi: [] };
+                            for(let i = 0; i < 20; i++) {
+                                let val = roundPresets[r][d][i];
+                                if (val !== "") {
+                                    icoObj.isi_sisi.push({ 
+                                        huruf: String.fromCharCode(65 + i), 
+                                        nilai: val 
+                                    });
+                                }
+                            }
+                            roundObj.icosahedrons.push(icoObj);
+                        } else if (d === 0 && isEmpty) {
+                            break; // Skip pengecekan Ico 2 & 3 jika Ico 1 di ronde ini masih kosong
+                        }
+                    }
+                    if (roundObj.icosahedrons.length > 0) {
+                        topoJSON.data_ronde.push(roundObj);
+                    }
+                }
+
+                // Export Logic
+                const blob = new Blob([JSON.stringify(topoJSON, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; 
+                a.download = 'topologi_icosahedron_ai.json'; 
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showStatus("✅ File JSON AI Diexport!", "text-purple-400");
+            });
+
+            renderSaveList();
+        }
+
+        // --- ANIMASI DAN RESIZE ---
+        function onWindowResize() {
+            camera.aspect = CANVAS_CONTAINER.clientWidth / CANVAS_CONTAINER.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(CANVAS_CONTAINER.clientWidth, CANVAS_CONTAINER.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            icosahedrons.forEach((die, idx) => {
+                // Jangan mutar otomatis jika sedang disentuh
+                let isBeingDragged = false;
+                manualRotations.forEach((data) => { if (data.mesh === die) isBeingDragged = true; });
+                if (!isBeingDragged) {
+                    die.rotation.x += baseRotationSpeed.x * speedMultiplier;
+                    die.rotation.y += baseRotationSpeed.y * speedMultiplier;
+                    die.rotation.z += baseRotationSpeed.z * speedMultiplier;
+                }
+            });
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- EKSEKUSI UTAMA ---
+        init3D();
+        initUI();
+        animate();
+    </script>
+</body>
+</html>
