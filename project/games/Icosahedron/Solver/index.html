@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icosahedron Path Solver</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Animasi Pop untuk huruf */
+        .letter-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .letter-btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- PANEL KIRI: SETUP PERMAINAN -->
+        <div class="w-full md:w-1/3 bg-slate-800 border-b md:border-b-0 md:border-r border-slate-700 p-6 flex flex-col">
+            <h1 class="text-xl font-bold text-indigo-400 mb-1">Path Solver</h1>
+            <p class="text-xs text-slate-400 mb-6">Misi Kalkulasi Icosahedron</p>
+
+            <!-- Player Management -->
+            <div class="mb-5">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-sm font-semibold text-slate-300">Pemain</label>
+                    <button id="btn-add-player" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 transition">+ Tambah</button>
+                </div>
+                <div id="players-container" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                    <!-- Daftar player akan di-render di sini -->
+                </div>
+            </div>
+
+            <!-- Round Selection -->
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Pilih Ronde</label>
+                <div class="flex gap-2">
+                    <button class="round-btn flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors" data-round="1">R1</button>
+                    <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="2">R2</button>
+                    <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="3">R3</button>
+                </div>
+            </div>
+
+            <!-- Target Number -->
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Target Number</label>
+                <input type="number" id="target-input" placeholder="Masukkan angka target..." class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-lg font-bold text-white focus:outline-none focus:border-indigo-500 transition-all text-center">
+            </div>
+
+            <!-- Icosahedron Selection -->
+            <div class="mb-2">
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Sumber Data Icosahedron</label>
+                <div class="flex gap-2">
+                    <button class="ico-btn flex-1 py-1.5 bg-emerald-600 text-white rounded text-sm font-bold shadow transition-colors" data-ico="0">Ico 1</button>
+                    <button class="ico-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-ico="1">Ico 2</button>
+                </div>
+            </div>
+
+            <!-- Import Topologi -->
+            <div class="mt-auto pt-5">
+                <input type="file" id="import-topology-file" accept=".json" class="hidden">
+                <button id="btn-import-topology" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600 rounded text-xs font-bold transition-colors flex justify-center items-center gap-2">
+                    📥 Import Topologi & Soal
+                </button>
+            </div>
+        </div>
+
+        <!-- PANEL KANAN: INPUT & HASIL -->
+        <div class="w-full md:w-2/3 p-6 flex flex-col bg-slate-900">
+            
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-300">Kombinasi Huruf Terhubung</h2>
+                    <p class="text-xs text-slate-500">Pilih huruf yang sisi-sisinya saling menempel (urutan bebas)</p>
+                </div>
+                <button id="btn-clear-path" class="text-xs text-red-400 hover:text-red-300 transition">Reset Pilihan</button>
+            </div>
+
+            <!-- Display Jalur yang Dipilih -->
+            <div class="bg-slate-950 border border-slate-700 rounded-lg p-3 min-h-[60px] flex items-center flex-wrap gap-2 mb-6" id="path-display">
+                <span class="text-slate-600 text-sm italic">Belum ada huruf yang dipilih...</span>
+            </div>
+
+            <!-- Grid Huruf A-T -->
+            <div class="grid grid-cols-5 gap-2 mb-8" id="letter-grid">
+                <!-- Tombol Huruf akan di-generate via JS -->
+            </div>
+
+            <!-- Area Evaluasi / Submit -->
+            <div class="mt-auto border-t border-slate-700 pt-4">
+                <button id="btn-submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors text-base font-bold shadow-lg shadow-indigo-900/50 mb-4 tracking-wider">
+                    SUBMIT
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL HASIL (POP-UP) -->
+    <div id="modal-result" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-md shadow-2xl transform transition-all scale-95 opacity-0" id="modal-content">
+            <h3 class="text-center font-bold text-2xl mb-5" id="result-title">Hasil Analisis</h3>
+            
+            <div class="space-y-4">
+                <!-- Kriteria 1 -->
+                <div class="flex justify-between items-center p-3 rounded bg-slate-900 border border-slate-700 shadow-inner">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-200">1. Target Number</p>
+                        <p class="text-xs text-slate-400 mt-1" id="result-math-detail">0 = 0</p>
+                    </div>
+                    <div id="badge-math" class="px-3 py-1.5 rounded text-xs font-bold bg-slate-700 text-slate-400 border border-slate-600">WAIT</div>
+                </div>
+
+                <!-- Kriteria 2 -->
+                <div class="flex justify-between items-center p-3 rounded bg-slate-900 border border-slate-700 shadow-inner">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-200">2. Sisi Terhubung</p>
+                        <p class="text-xs text-slate-400 mt-1" id="result-path-detail">Mengecek koneksi kelompok...</p>
+                    </div>
+                    <div id="badge-path" class="px-3 py-1.5 rounded text-xs font-bold bg-slate-700 text-slate-400 border border-slate-600">WAIT</div>
+                </div>
+            </div>
+
+            <button id="btn-close-modal" class="mt-6 w-full py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-colors shadow">
+                Tutup Pengecekan
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIKA -->
+    <script>
+        // --- 1. DATA & STATE MEMORY ---
+        // Data angka diwarisi dari skrip sebelumnya
+        let PRESETS = {
+            1: {
+                0: [13, 34, 7, 41, 26, 11, 39, 17, 46, 23, 19, 31, 14, 43, 6, 29, 3, 47, 37, 21],
+                1: Array(20).fill(0)
+            },
+            2: {
+                0: [11, 26, 8, 41, 22, 17, 34, 19, 45, 25, 14, 33, 7, 48, 5, 29, 4, 38, 31, 21],
+                1: [15, 30, 10, 31, 37, 41, 19, 28, 3, 50, 23, 6, 42, 12, 25, 13, 26, 38, 16, 47]
+            },
+            3: {
+                0: Array(20).fill(0),
+                1: Array(20).fill(0)
+            }
+        };
+
+        // Peta kedekatan Icosahedron (Topological Map).
+        // Sesuai dengan struktur fisik dadu yang diberikan (A-T).
+        let ADJACENCY = [
+            [1, 4, 6],    // 0 (A) menempel dengan B(1), E(4), G(6)
+            [0, 2, 5],    // 1 (B) menempel dengan A(0), C(2), F(5)
+            [1, 3, 9],    // 2 (C) menempel dengan B(1), D(3), J(9)
+            [2, 4, 8],    // 3 (D) menempel dengan C(2), E(4), I(8)
+            [0, 3, 7],    // 4 (E) menempel dengan A(0), D(3), H(7)
+            [1, 15, 19],  // 5 (F) menempel dengan B(1), P(15), T(19)
+            [0, 15, 16],  // 6 (G) menempel dengan A(0), P(15), Q(16)
+            [4, 16, 17],  // 7 (H) menempel dengan E(4), Q(16), R(17)
+            [3, 17, 18],  // 8 (I) menempel dengan D(3), R(17), S(18)
+            [2, 18, 19],  // 9 (J) menempel dengan C(2), S(18), T(19)
+            [11, 14, 15], // 10 (K) menempel dengan L(11), O(14), P(15)
+            [10, 12, 16], // 11 (L) menempel dengan K(10), M(12), Q(16)
+            [11, 13, 17], // 12 (M) menempel dengan L(11), N(13), R(17)
+            [12, 14, 18], // 13 (N) menempel dengan M(12), O(14), S(18)
+            [10, 13, 19], // 14 (O) menempel dengan K(10), N(13), T(19)
+            [5, 6, 10],   // 15 (P) menempel dengan F(5), G(6), K(10)
+            [6, 7, 11],   // 16 (Q) menempel dengan G(6), H(7), L(11)
+            [7, 8, 12],   // 17 (R) menempel dengan H(7), I(8), M(12)
+            [8, 9, 13],   // 18 (S) menempel dengan I(8), J(9), N(13)
+            [5, 9, 14]    // 19 (T) menempel dengan F(5), J(9), O(14)
+        ];
+
+        let state = {
+            players: [
+                { id: 1, name: "Player 1", active: true },
+                { id: 2, name: "Player 2", active: false }
+            ],
+            round: 1,
+            ico: 0,
+            path: [] // Array of index huruf yang dipilih berurutan (0-19)
+        };
+
+        // --- 2. UI ELEMENTS ---
+        const playersContainer = document.getElementById('players-container');
+        const letterGrid = document.getElementById('letter-grid');
+        const pathDisplay = document.getElementById('path-display');
+        const targetInput = document.getElementById('target-input');
+
+        // --- 3. RENDERING FUNCTIONS ---
+        function renderPlayers() {
+            playersContainer.innerHTML = '';
+            state.players.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = `flex items-center gap-2 p-1.5 rounded border ${p.active ? 'bg-slate-700 border-indigo-500' : 'bg-slate-900 border-slate-700'} transition-all`;
+                
+                // Radio button untuk pilih player yang aktif
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'active_player';
+                radio.checked = p.active;
+                radio.className = 'accent-indigo-500 w-4 h-4 cursor-pointer';
+                radio.onchange = () => {
+                    state.players.forEach(pl => pl.active = false);
+                    p.active = true;
+                    renderPlayers();
+                };
+
+                // Input text untuk nama
+                const inputName = document.createElement('input');
+                inputName.type = 'text';
+                inputName.value = p.name;
+                inputName.className = 'flex-1 bg-transparent border-none text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-400 rounded px-1';
+                inputName.onchange = (e) => p.name = e.target.value;
+
+                div.appendChild(radio);
+                div.appendChild(inputName);
+
+                // Tombol hapus jika lebih dari 1 player
+                if(state.players.length > 1) {
+                    const btnDel = document.createElement('button');
+                    btnDel.innerHTML = '✕';
+                    btnDel.className = 'text-slate-500 hover:text-red-400 text-xs px-2';
+                    btnDel.onclick = () => {
+                        state.players.splice(index, 1);
+                        if(p.active && state.players.length > 0) state.players[0].active = true;
+                        renderPlayers();
+                    };
+                    div.appendChild(btnDel);
+                }
+
+                playersContainer.appendChild(div);
+            });
+        }
+
+        function renderLetterGrid() {
+            letterGrid.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const char = String.fromCharCode(65 + i); // A - T
+                const btn = document.createElement('button');
+                const isSelected = state.path.includes(i);
+                
+                let baseClass = "letter-btn h-12 rounded-lg font-bold text-lg shadow transition-all border-b-4 ";
+                if (isSelected) {
+                    // Huruf yang sudah dipilih
+                    const orderIndex = state.path.indexOf(i) + 1;
+                    baseClass += "bg-indigo-600 text-white border-indigo-800 ring-2 ring-indigo-400";
+                    btn.innerHTML = `<span class="opacity-30 text-[10px] absolute top-1 left-1">${orderIndex}</span>${char}`;
+                } else {
+                    // Huruf yang belum dipilih
+                    baseClass += "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600 hover:text-white";
+                    btn.innerHTML = char;
+                }
+
+                btn.className = baseClass + " relative flex items-center justify-center";
+                
+                btn.onclick = () => {
+                    if (isSelected) {
+                        // Jika di-klik lagi, hapus dari path (dan hapus semua setelahnya)
+                        const idx = state.path.indexOf(i);
+                        state.path = state.path.slice(0, idx);
+                    } else {
+                        // Tambahkan ke path
+                        state.path.push(i);
+                    }
+                    updatePathUI();
+                    hideResult();
+                };
+                
+                letterGrid.appendChild(btn);
+            }
+        }
+
+        function updatePathUI() {
+            renderLetterGrid();
+            
+            if (state.path.length === 0) {
+                pathDisplay.innerHTML = '<span class="text-slate-600 text-sm italic">Belum ada huruf yang dipilih...</span>';
+                return;
+            }
+
+            pathDisplay.innerHTML = '';
+            state.path.forEach((idx, i) => {
+                const char = String.fromCharCode(65 + idx);
+                
+                const badge = document.createElement('div');
+                badge.className = 'bg-indigo-500/20 border border-indigo-500/50 text-indigo-300 px-2 py-1 rounded text-sm font-bold flex items-center gap-1';
+                badge.innerText = char;
+                
+                pathDisplay.appendChild(badge);
+
+                // Tambahkan tanda plus jika bukan elemen terakhir
+                if (i < state.path.length - 1) {
+                    const plus = document.createElement('span');
+                    plus.className = 'text-slate-500 text-xs font-bold';
+                    plus.innerText = '+';
+                    pathDisplay.appendChild(plus);
+                }
+            });
+        }
+
+        function hideResult() {
+            const modal = document.getElementById('modal-result');
+            const modalContent = document.getElementById('modal-content');
+            
+            // Animasi menghilang
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200); // Tunggu durasi transisi selesai
+        }
+
+        // --- 4. LOGIKA EVALUASI (INTI APLIKASI) ---
+        function evaluateAnswer() {
+            if (state.path.length === 0) {
+                alert("Pilih minimal 1 huruf terlebih dahulu!");
+                return;
+            }
+            if (!targetInput.value) {
+                alert("Masukkan Target Number terlebih dahulu!");
+                return;
+            }
+
+            const target = parseInt(targetInput.value);
+            const currentValues = PRESETS[state.round][state.ico];
+            
+            // Evaluasi Kriteria 1: Matematika (Sum)
+            let sum = 0;
+            let sumText = [];
+            state.path.forEach(idx => {
+                const val = currentValues[idx];
+                sum += val;
+                sumText.push(val);
+            });
+
+            const isMathCorrect = sum === target;
+            
+            // Evaluasi Kriteria 2: Sisi saling menempel (Connected Cluster/Order Independent)
+            let isPathCorrect = true;
+            let pathErrorDetail = "Semua huruf saling menempel membentuk 1 kesatuan.";
+            
+            if (state.path.length > 1) {
+                // Algoritma Breadth-First Search (BFS) untuk mengecek konektivitas kelompok
+                const visited = new Set();
+                const queue = [state.path[0]];
+                visited.add(state.path[0]);
+                
+                while (queue.length > 0) {
+                    const currentIdx = queue.shift();
+                    const neighbors = ADJACENCY[currentIdx];
+                    
+                    neighbors.forEach(neighborIdx => {
+                        // Jika tetangga termasuk dalam huruf yang dipilih dan belum dikunjungi
+                        if (state.path.includes(neighborIdx) && !visited.has(neighborIdx)) {
+                            visited.add(neighborIdx);
+                            queue.push(neighborIdx);
+                        }
+                    });
+                }
+                
+                // Jika jumlah yang terkoneksi sama dengan jumlah huruf yang dipilih, berarti menempel semua
+                if (visited.size === state.path.length) {
+                    isPathCorrect = true;
+                } else {
+                    isPathCorrect = false;
+                    pathErrorDetail = "Terdapat huruf yang terpisah (tidak menempel dengan kelompok lain).";
+                }
+            } else if (state.path.length === 1) {
+                pathErrorDetail = "Hanya 1 sisi yang dipilih.";
+            } else {
+                isPathCorrect = false;
+                pathErrorDetail = "Belum ada huruf yang dipilih.";
+            }
+
+            // Tampilkan Hasil ke UI (Pop-Up Modal)
+            const modalResult = document.getElementById('modal-result');
+            const modalContent = document.getElementById('modal-content');
+            const resultTitle = document.getElementById('result-title');
+            
+            // Update UI Kriteria 1
+            const badgeMath = document.getElementById('badge-math');
+            document.getElementById('result-math-detail').innerText = `${sumText.join(' + ')} = ${sum} (Target: ${target})`;
+            if (isMathCorrect) {
+                badgeMath.className = 'px-2 py-1 rounded text-xs font-bold bg-emerald-900/50 text-emerald-400 border border-emerald-500/30';
+                badgeMath.innerText = 'BENAR';
+            } else {
+                badgeMath.className = 'px-2 py-1 rounded text-xs font-bold bg-red-900/50 text-red-400 border border-red-500/30';
+                badgeMath.innerText = 'SALAH';
+            }
+
+            // Update UI Kriteria 2
+            const badgePath = document.getElementById('badge-path');
+            document.getElementById('result-path-detail').innerText = pathErrorDetail;
+            if (isPathCorrect) {
+                badgePath.className = 'px-2 py-1 rounded text-xs font-bold bg-emerald-900/50 text-emerald-400 border border-emerald-500/30';
+                badgePath.innerText = 'VALID';
+            } else {
+                badgePath.className = 'px-2 py-1 rounded text-xs font-bold bg-red-900/50 text-red-400 border border-red-500/30';
+                badgePath.innerText = 'PUTUS';
+            }
+
+            // Judul Keseluruhan
+            if (isMathCorrect && isPathCorrect) {
+                resultTitle.innerText = "✨ MISI BERHASIL ✨";
+                resultTitle.className = "text-center font-bold text-2xl mb-5 text-emerald-400";
+            } else {
+                resultTitle.innerText = "⚠️ MISI GAGAL ⚠️";
+                resultTitle.className = "text-center font-bold text-2xl mb-5 text-red-400";
+            }
+
+            // Tampilkan modal beserta efek pop-up
+            modalResult.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        // --- 5. EVENT LISTENERS ---
+        document.getElementById('btn-add-player').onclick = () => {
+            const newId = state.players.length > 0 ? Math.max(...state.players.map(p => p.id)) + 1 : 1;
+            state.players.push({ id: newId, name: `Player ${newId}`, active: state.players.length === 0 });
+            renderPlayers();
+        };
+
+        // Round Buttons
+        document.querySelectorAll('.round-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                document.querySelectorAll('.round-btn').forEach(b => {
+                    b.className = "round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors";
+                });
+                e.target.className = "round-btn flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors";
+                state.round = parseInt(e.target.dataset.round);
+                hideResult();
+            };
+        });
+
+        // Ico Buttons
+        document.querySelectorAll('.ico-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                document.querySelectorAll('.ico-btn').forEach(b => {
+                    b.className = "ico-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors";
+                });
+                e.target.className = "ico-btn flex-1 py-1.5 bg-emerald-600 text-white rounded text-sm font-bold shadow transition-colors";
+                state.ico = parseInt(e.target.dataset.ico);
+                hideResult();
+            };
+        });
+
+        document.getElementById('btn-clear-path').onclick = () => {
+            state.path = [];
+            updatePathUI();
+            hideResult();
+        };
+
+        targetInput.addEventListener('input', hideResult);
+
+        document.getElementById('btn-submit').onclick = evaluateAnswer;
+        document.getElementById('btn-close-modal').onclick = hideResult;
+
+        // --- FITUR IMPORT JSON ---
+        document.getElementById('btn-import-topology').onclick = () => {
+            document.getElementById('import-topology-file').click();
+        };
+
+        document.getElementById('import-topology-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    let isSuccess = false;
+
+                    if (data.PRESETS) {
+                        PRESETS = data.PRESETS;
+                        isSuccess = true;
+                    }
+                    if (data.ADJACENCY) {
+                        ADJACENCY = data.ADJACENCY;
+                        isSuccess = true;
+                    }
+                    
+                    if (isSuccess) {
+                        alert('✅ File JSON berhasil diimport! Variabel sistem telah diperbarui.');
+                        hideResult();
+                        state.path = []; // Kosongkan papan setelah import agar sinkron
+                        updatePathUI();
+                    } else {
+                        alert('⚠️ JSON tidak valid. Pastikan ada key "PRESETS" atau "ADJACENCY".');
+                    }
+                } catch (err) {
+                    alert('❌ Gagal mengurai file JSON!');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset input
+        });
+
+        // --- 6. INITIAL RUN ---
+        renderPlayers();
+        updatePathUI();
+
+    </script>
+</body>
+</html>
