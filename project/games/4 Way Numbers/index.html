@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL MATRIX — Memory Training</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <style>
+        :root {
+            --bg: #050a12;
+            --bg2: #0a1220;
+            --panel: #0d1a2e;
+            --border: #1a3a5c;
+            --neon-blue: #00d4ff;
+            --neon-green: #00ff9d;
+            --neon-yellow: #ffe500;
+            --neon-red: #ff3860;
+            --neon-purple: #b44fff;
+            --neon-orange: #ff8c00;
+            --neon-pink: #ff2a85;
+            --neon-cyan: #00ffff;
+            --text: #c8e6ff;
+            --text-dim: #4a7fa5;
+            --cell-bg: #0d1e30;
+            --cell-hover: #112740;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none; z-index: 0;
+        }
+        body::after {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0,212,255,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+        @keyframes gridMove { 0%{transform:translateY(0)} 100%{transform:translateY(40px)} }
+
+        .container {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 640px;
+            padding: 20px 16px 50px;
+        }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 24px; padding-top: 20px; }
+        .header .subtitle {
+            font-family: 'Orbitron', monospace; font-size: 10px;
+            letter-spacing: 6px; color: var(--neon-blue); opacity: 0.8; margin-bottom: 8px;
+        }
+        .header h1 {
+            font-family: 'Orbitron', monospace; font-size: clamp(22px,6vw,36px);
+            font-weight: 900; color: #fff; letter-spacing: 3px; line-height: 1.1;
+            text-shadow: 0 0 20px var(--neon-blue), 0 0 60px rgba(0,212,255,0.3);
+        }
+        .header h1 span { color: var(--neon-blue); }
+        .header-line {
+            width: 60px; height: 2px; margin: 12px auto 0;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        /* Panel */
+        .panel {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px 20px; margin-bottom: 14px;
+            position: relative; overflow: hidden;
+        }
+        .panel::before {
+            content: ''; position: absolute; top:0; left:0; right:0; height:1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+        .panel-title {
+            font-family: 'Orbitron', monospace; font-size: 9px;
+            letter-spacing: 4px; color: var(--neon-blue); margin-bottom: 12px; opacity: 0.7;
+        }
+
+        /* Info list */
+        .info-list { font-size: 13px; line-height: 1.7; list-style: none; margin-bottom: 14px; }
+        .info-list li { padding: 3px 0 3px 18px; position: relative; }
+        .info-list li::before { content: '▸'; position: absolute; left: 0; color: var(--neon-blue); }
+        .info-list strong { color: var(--neon-yellow); }
+
+        /* Settings */
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .setting-group label {
+            display: block; font-family: 'Orbitron', monospace; font-size: 8px;
+            letter-spacing: 3px; color: var(--text-dim); margin-bottom: 5px;
+        }
+        .setting-group select, .setting-group input[type="number"], .setting-group input[type="text"] {
+            width: 100%; background: var(--bg2); color: var(--neon-blue);
+            border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+            font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+            outline: none; transition: border-color 0.2s;
+        }
+        .setting-group select {
+            cursor: pointer; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300d4ff'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+        }
+        .setting-group select:focus, .setting-group input:focus { border-color: var(--neon-blue); }
+        .setting-group.full { grid-column: 1 / -1; }
+        .mode-desc {
+            background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 6px; padding: 7px 11px; font-size: 12px;
+            color: var(--text-dim); margin-top: 4px;
+        }
+
+        /* Custom Inputs Grid */
+        .custom-inputs-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 6px; margin-top: 8px;
+        }
+        .custom-step-input {
+            width: 100%; background: var(--bg2); color: var(--neon-blue);
+            border: 1px solid var(--border); border-radius: 4px; padding: 6px 4px;
+            font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700;
+            text-align: center; outline: none; transition: border-color 0.2s;
+        }
+        .custom-step-input:focus { border-color: var(--neon-blue); box-shadow: 0 0 8px rgba(0,212,255,0.3); }
+
+        /* Lives & Timer */
+        #lives-display {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 10px;
+            font-family: 'Orbitron', monospace; font-size: 9px;
+            letter-spacing: 3px; color: var(--neon-red);
+        }
+        .heart {
+            font-size: 20px; line-height: 1;
+            filter: drop-shadow(0 0 6px rgba(255,56,96,0.9));
+            transition: all 0.3s;
+        }
+        .heart.lost { filter: grayscale(1) opacity(0.25); transform: scale(0.75); }
+
+        #timer-display {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 12px;
+            font-family: 'Orbitron', monospace; font-size: 9px;
+            letter-spacing: 1px; color: var(--text-dim);
+        }
+        .timer-box {
+            background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.15);
+            padding: 5px 12px; border-radius: 6px; transition: all 0.3s;
+        }
+        .timer-box span { font-weight: 700; font-size: 11px; margin-left: 4px; }
+        .timer-box.active { color: var(--neon-blue); border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0,212,255,0.2); }
+        .timer-box.recall.active { color: var(--neon-yellow); border-color: var(--neon-yellow); box-shadow: 0 0 10px rgba(255,229,0,0.2); }
+
+        /* Status & Progress */
+        .status-bar { text-align: center; padding: 10px 4px 4px; margin-bottom: 12px; }
+        #status-text {
+            font-family: 'Orbitron', monospace; font-size: clamp(10px,2.8vw,14px);
+            font-weight: 700; color: var(--text); letter-spacing: 0.5px;
+            line-height: 1.6; min-height: 22px; white-space: pre-line; transition: color 0.3s;
+        }
+        .recall-dots {
+            display: flex; justify-content: center; gap: 8px;
+            margin: 10px 0 6px; flex-wrap: wrap; min-height: 14px;
+        }
+        .recall-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 2px solid var(--border); background: var(--bg2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+        }
+        .recall-dot.active {
+            background: var(--neon-blue); border-color: #fff;
+            box-shadow: 0 0 10px var(--neon-blue), inset 0 0 4px rgba(255,255,255,0.5);
+            transform: scale(1.15);
+        }
+
+        .step-row {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-top: 10px; margin-bottom: 4px;
+        }
+        .step-badge {
+            font-family: 'Orbitron', monospace; font-size: 9px; padding: 3px 10px;
+            border-radius: 20px; background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.25); color: var(--neon-blue); letter-spacing: 1px;
+        }
+        .pct-label { font-family: 'Orbitron', monospace; font-size: 9px; color: var(--text-dim); }
+        .progress-bar { height: 2px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            transition: width 0.3s; box-shadow: 0 0 8px rgba(0,212,255,0.6);
+        }
+
+        /* --- GAME AREA WRAPPER --- */
+        .game-area-wrapper {
+            position: relative; padding: 16px;
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 16px; margin-bottom: 16px;
+            min-height: 380px;
+            display: flex; flex-direction: column; justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+        .game-area-wrapper::before {
+            content: ''; position: absolute; top:0; left:0; right:0; height:1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+        .game-area-wrapper::after {
+            content: 'MATRIX'; position: absolute; top: 6px; right: 14px;
+            font-family: 'Orbitron', monospace; font-size: 7px;
+            letter-spacing: 3px; color: var(--text-dim); opacity: 0.35;
+        }
+
+        /* --- 1. GRID MODE STYLES --- */
+        .grid-container { display: grid; justify-content: center; gap: 10px; margin: 0 auto; width: 100%; }
+        .grid-3 { grid-template-columns: repeat(3,1fr); max-width: 380px; }
+        .grid-4 { grid-template-columns: repeat(4,1fr); max-width: 380px; }
+        .grid-5 { grid-template-columns: repeat(5,1fr); max-width: 380px; }
+
+        .cell {
+            aspect-ratio: 1; background: var(--cell-bg);
+            border: 1px solid var(--border); border-radius: 10px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; position: relative; overflow: hidden;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .cell-num {
+            position: absolute; top: 4px; left: 6px;
+            font-family: 'Orbitron', monospace; font-size: 7px;
+            color: var(--text-dim); opacity: 0.35; pointer-events: none;
+        }
+        /* MENGGUNAKAN FONT TEBAL UNTUK MEMASTIKAN TEX MUDAH DIBACA */
+        .cell-inner {
+            display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 100%; font-family: 'Orbitron', monospace;
+            font-weight: 900; color: #fff; text-shadow: 0 0 6px rgba(255,255,255,0.4);
+            text-align: center; line-height: 1.1; padding: 4px; letter-spacing: 1px;
+        }
+        .grid-3 .cell-inner { font-size: clamp(20px,6vw,32px); }
+        .grid-4 .cell-inner { font-size: clamp(16px,4.5vw,24px); }
+        .grid-5 .cell-inner { font-size: clamp(12px,3.5vw,18px); }
+        
+        /* Modifikasi KaTeX untuk memaksa Bold jika diperlukan */
+        .katex { color: inherit !important; font-size: 1.35em !important; }
+        .katex * { font-weight: 900 !important; }
+        .katex-display { margin: 0 !important; }
+
+        .cell::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at center, rgba(0,212,255,0.08), transparent 70%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .cell:hover { border-color: rgba(0,212,255,0.4); background: var(--cell-hover); }
+        .cell:hover::before { opacity: 1; }
+
+        .cell.active {
+            background: linear-gradient(135deg,#0d2a45,#0a1e35); border-color: var(--neon-blue);
+            box-shadow: 0 0 18px rgba(0,212,255,0.4), inset 0 0 18px rgba(0,212,255,0.08);
+            animation: pulseCell 0.3s ease;
+        }
+        .cell.active .cell-inner { color: var(--neon-blue); text-shadow: 0 0 10px currentColor; }
+        .cell.active::before { opacity: 1; }
+        .cell.active::after {
+            content: ''; position: absolute; top: -40%; left: 0;
+            width: 100%; height: 40%;
+            background: linear-gradient(transparent,rgba(0,212,255,0.12),transparent);
+            animation: scanline 0.6s ease forwards;
+        }
+        .cell.correct {
+            background: linear-gradient(135deg,#062016,#0a2e1e); border-color: var(--neon-green);
+            box-shadow: 0 0 18px rgba(0,255,157,0.4), inset 0 0 16px rgba(0,255,157,0.07);
+            animation: correctFlash 0.3s ease;
+        }
+        .cell.correct .cell-inner { color: var(--neon-green); text-shadow: 0 0 10px currentColor; }
+        .cell.wrong {
+            background: linear-gradient(135deg,#200608,#2e0a0e); border-color: var(--neon-red);
+            box-shadow: 0 0 18px rgba(255,56,96,0.5), inset 0 0 16px rgba(255,56,96,0.09);
+            animation: wrongShake 0.4s ease;
+        }
+        .cell.wrong .cell-inner { color: var(--neon-red); text-shadow: 0 0 10px currentColor; }
+
+        /* --- 2. PIANO TILES MODE STYLES --- */
+        .piano-wrapper {
+            display: flex; width: 100%; height: 320px;
+            margin: 0 auto; gap: 4px; position: relative; overflow: hidden;
+            background: rgba(0, 0, 0, 0.2); border-radius: 8px;
+            transition: height 0.3s ease;
+        }
+        .piano-wrapper.flow { height: 500px; }
+        .piano-lane {
+            flex: 1; border-right: 1px dashed rgba(0,212,255,0.15);
+            position: relative; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+            display: flex; justify-content: center;
+        }
+        .piano-lane:last-child { border-right: none; }
+        .piano-lane:hover { background: rgba(0,212,255,0.05); }
+        .lane-label {
+            position: absolute; bottom: 10px; width: 100%; text-align: center;
+            font-family: 'Orbitron', monospace; font-size: 10px;
+            color: var(--text-dim); opacity: 0.4; pointer-events: none;
+        }
+        .piano-tile {
+            position: absolute; width: 92%; height: 70px;
+            background: linear-gradient(135deg,#0d2a45,#0a1e35);
+            border: 2px solid var(--neon-blue); border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px rgba(0,212,255,0.4), inset 0 0 10px rgba(0,212,255,0.1);
+            color: var(--neon-blue); font-size: clamp(18px, 5vw, 28px); font-weight: 900; z-index: 5;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .piano-lane.correct {
+            background: linear-gradient(to top, rgba(0,255,157,0.25), transparent);
+            border: 1px solid var(--neon-green); box-shadow: inset 0 -20px 20px rgba(0,255,157,0.1);
+        }
+        .piano-lane.wrong {
+            background: linear-gradient(to top, rgba(255,56,96,0.25), transparent);
+            border: 1px solid var(--neon-red); box-shadow: inset 0 -20px 20px rgba(255,56,96,0.1);
+            animation: wrongShake 0.4s ease;
+        }
+
+        /* --- RECALL FEEDBACK TILES --- */
+        .piano-tile.correct, .cross-tile.correct {
+            background: linear-gradient(135deg, #062016, #0a2e1e) !important;
+            border-color: var(--neon-green) !important;
+            box-shadow: 0 0 15px rgba(0,255,157,0.6), inset 0 0 10px rgba(0,255,157,0.2) !important;
+            color: var(--neon-green) !important;
+        }
+        .piano-tile.wrong, .cross-tile.wrong {
+            background: linear-gradient(135deg, #200608, #2e0a0e) !important;
+            border-color: var(--neon-red) !important;
+            box-shadow: 0 0 15px rgba(255,56,96,0.6), inset 0 0 10px rgba(255,56,96,0.2) !important;
+            color: var(--neon-red) !important;
+        }
+
+        /* --- SPAWN MARKERS (PENANDA TEMPAT KELUAR) --- */
+        .spawn-marker {
+            position: absolute; top: 0; left: 0; width: 100%; height: 30px;
+            border-top: 5px solid var(--neon-blue);
+            background: linear-gradient(to bottom, rgba(0, 212, 255, 0.15), transparent);
+            pointer-events: none; z-index: 1000;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding-top: 4px;
+        }
+        .spawn-marker::after {
+            content: 'SPAWN'; font-family: 'Orbitron', monospace;
+            font-size: 8px; color: rgba(0, 212, 255, 0.9); letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        .cross-spawn {
+            position: absolute;
+            pointer-events: none; z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .cross-spawn::after {
+            content: 'SPAWN'; font-family: 'Orbitron', monospace; font-size: 7px; letter-spacing: 2px; font-weight: bold;
+        }
+        /* 4 Arah Utama */
+        .cross-spawn.dir-0 {
+            top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 25px;
+            border-top: 5px solid var(--neon-blue); background: linear-gradient(to bottom, rgba(0,212,255,0.2), transparent);
+            color: var(--neon-blue); align-items: flex-start; padding-top: 3px; text-shadow: 0 0 5px var(--neon-blue);
+        }
+        .cross-spawn.dir-1 {
+            top: 50%; right: 0; transform: translateY(-50%); width: 25px; height: 100px;
+            border-right: 5px solid var(--neon-green); background: linear-gradient(to left, rgba(0,255,157,0.2), transparent);
+            color: var(--neon-green); justify-content: flex-end; padding-right: 3px; text-shadow: 0 0 5px var(--neon-green);
+        }
+        .cross-spawn.dir-1::after { writing-mode: vertical-rl; }
+        .cross-spawn.dir-2 {
+            bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 25px;
+            border-bottom: 5px solid var(--neon-red); background: linear-gradient(to top, rgba(255,56,96,0.2), transparent);
+            color: var(--neon-red); align-items: flex-end; padding-bottom: 3px; text-shadow: 0 0 5px var(--neon-red);
+        }
+        .cross-spawn.dir-3 {
+            top: 50%; left: 0; transform: translateY(-50%); width: 25px; height: 100px;
+            border-left: 5px solid var(--neon-yellow); background: linear-gradient(to right, rgba(255,229,0,0.2), transparent);
+            color: var(--neon-yellow); justify-content: flex-start; padding-left: 3px; text-shadow: 0 0 5px var(--neon-yellow);
+        }
+        .cross-spawn.dir-3::after { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+        /* Tambahan 4 Arah Sudut (Mode 8 Arah) */
+        .cross-spawn.dir-4 {
+            top: 0; left: 0; width: 50px; height: 50px;
+            border-top: 5px solid var(--neon-purple); border-left: 5px solid var(--neon-purple);
+            background: radial-gradient(circle at top left, rgba(180,79,255,0.2), transparent);
+            color: var(--neon-purple); align-items: flex-start; justify-content: flex-start;
+            padding: 3px 0 0 3px; text-shadow: 0 0 5px var(--neon-purple); border-top-left-radius: 0;
+        }
+        .cross-spawn.dir-4::after { transform: rotate(-45deg); transform-origin: top left; }
+        .cross-spawn.dir-5 {
+            top: 0; right: 0; width: 50px; height: 50px;
+            border-top: 5px solid var(--neon-orange); border-right: 5px solid var(--neon-orange);
+            background: radial-gradient(circle at top right, rgba(255,140,0,0.2), transparent);
+            color: var(--neon-orange); align-items: flex-start; justify-content: flex-end;
+            padding: 3px 3px 0 0; text-shadow: 0 0 5px var(--neon-orange); border-top-right-radius: 0;
+        }
+        .cross-spawn.dir-5::after { transform: rotate(45deg); transform-origin: top right; }
+
+        .cross-spawn.dir-6 {
+            bottom: 0; right: 0; width: 50px; height: 50px;
+            border-bottom: 5px solid var(--neon-pink); border-right: 5px solid var(--neon-pink);
+            background: radial-gradient(circle at bottom right, rgba(255,42,133,0.2), transparent);
+            color: var(--neon-pink); align-items: flex-end; justify-content: flex-end;
+            padding: 0 3px 3px 0; text-shadow: 0 0 5px var(--neon-pink); border-bottom-right-radius: 0;
+        }
+        .cross-spawn.dir-6::after { transform: rotate(-45deg); transform-origin: bottom right; }
+
+        .cross-spawn.dir-7 {
+            bottom: 0; left: 0; width: 50px; height: 50px;
+            border-bottom: 5px solid var(--neon-cyan); border-left: 5px solid var(--neon-cyan);
+            background: radial-gradient(circle at bottom left, rgba(0,255,255,0.2), transparent);
+            color: var(--neon-cyan); align-items: flex-end; justify-content: flex-start;
+            padding: 0 0 3px 3px; text-shadow: 0 0 5px var(--neon-cyan); border-bottom-left-radius: 0;
+        }
+        .cross-spawn.dir-7::after { transform: rotate(45deg); transform-origin: bottom left; }
+
+        /* --- CENTER SPAWN (KHUSUS MODE OUTWARD/DARI TENGAH) --- */
+        .center-spawn {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70px; height: 70px; border-radius: 50%;
+            border: 2px dashed rgba(0, 212, 255, 0.6);
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.15), transparent);
+            z-index: 1000; pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+        .center-spawn::after {
+            content: 'CORE'; font-family: 'Orbitron', monospace; font-size: 11px;
+            font-weight: bold; color: var(--neon-blue); letter-spacing: 2px; opacity: 0.9;
+            text-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* --- 3. CROSSROAD & OUTWARD MODE STYLES --- */
+        .crossroad-wrapper {
+            position: relative; width: 100%; aspect-ratio: 1; max-height: 480px;
+            margin: 0 auto; background: rgba(0, 0, 0, 0.2); border-radius: 8px;
+            overflow: hidden;
+            /* Garis panduan persimpangan (kosmetik) */
+            background-image:
+                linear-gradient(90deg, transparent 49.5%, rgba(0,212,255,0.1) 49.5%, rgba(0,212,255,0.1) 50.5%, transparent 50.5%),
+                linear-gradient(0deg, transparent 49.5%, rgba(0,212,255,0.1) 49.5%, rgba(0,212,255,0.1) 50.5%, transparent 50.5%);
+        }
+
+        .cross-tile {
+            position: absolute; width: 80px; height: 80px;
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            font-size: clamp(18px, 5vw, 28px); font-weight: 900; text-shadow: 0 0 10px currentColor;
+            background: linear-gradient(135deg, #0d2a45, #0a1e35);
+        }
+        /* Pewarnaan Ubin Crossroad & Outward Berdasarkan Arah */
+        .cross-tile.dir-0 { border: 2px solid var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 15px rgba(0,212,255,0.4), inset 0 0 10px rgba(0,212,255,0.1); }
+        .cross-tile.dir-1 { border: 2px solid var(--neon-green); color: var(--neon-green); box-shadow: 0 0 15px rgba(0,255,157,0.4), inset 0 0 10px rgba(0,255,157,0.1); }
+        .cross-tile.dir-2 { border: 2px solid var(--neon-red); color: var(--neon-red); box-shadow: 0 0 15px rgba(255,56,96,0.4), inset 0 0 10px rgba(255,56,96,0.1); }
+        .cross-tile.dir-3 { border: 2px solid var(--neon-yellow); color: var(--neon-yellow); box-shadow: 0 0 15px rgba(255,229,0,0.4), inset 0 0 10px rgba(255,229,0,0.1); }
+        .cross-tile.dir-4 { border: 2px solid var(--neon-purple); color: var(--neon-purple); box-shadow: 0 0 15px rgba(180,79,255,0.4), inset 0 0 10px rgba(180,79,255,0.1); }
+        .cross-tile.dir-5 { border: 2px solid var(--neon-orange); color: var(--neon-orange); box-shadow: 0 0 15px rgba(255,140,0,0.4), inset 0 0 10px rgba(255,140,0,0.1); }
+        .cross-tile.dir-6 { border: 2px solid var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 15px rgba(255,42,133,0.4), inset 0 0 10px rgba(255,42,133,0.1); }
+        .cross-tile.dir-7 { border: 2px solid var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,255,255,0.4), inset 0 0 10px rgba(0,255,255,0.1); }
+
+        /* Zona Recall (4 atau 8 Arah) */
+        .cross-zone {
+            position: absolute; display: flex; justify-content: center; align-items: center;
+            font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 2px;
+            color: rgba(255,255,255,0.8);
+            opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 1000;
+            border-radius: 4px; text-transform: uppercase; font-weight: bold;
+        }
+        .crossroad-wrapper.recall-active .cross-zone { opacity: 0.15; pointer-events: auto; cursor: pointer; }
+        .crossroad-wrapper.recall-active .cross-zone:hover { opacity: 0.5; }
+        .cross-zone.top    { top: 0; left: 0; width: 100%; height: 35%; background: linear-gradient(to bottom, var(--neon-blue), transparent); align-items: flex-start; padding-top: 15px; }
+        .cross-zone.right  { top: 0; right: 0; width: 35%; height: 100%; background: linear-gradient(to left, var(--neon-green), transparent); justify-content: flex-end; padding-right: 15px; }
+        .cross-zone.bottom { bottom: 0; left: 0; width: 100%; height: 35%; background: linear-gradient(to top, var(--neon-red), transparent); align-items: flex-end; padding-bottom: 15px; }
+        .cross-zone.left   { top: 0; left: 0; width: 35%; height: 100%; background: linear-gradient(to right, var(--neon-yellow), transparent); justify-content: flex-start; padding-left: 15px; }
+
+        /* Zona Recall Ekstra (Sudut) */
+        .cross-zone.corner { z-index: 1001; font-size: 9px; text-align: center; }
+        .cross-zone.top-left { top: 0; left: 0; width: 35%; height: 35%; background: radial-gradient(circle at top left, var(--neon-purple), transparent); align-items: flex-start; justify-content: flex-start; padding: 15px 0 0 15px; }
+        .cross-zone.top-right { top: 0; right: 0; width: 35%; height: 35%; background: radial-gradient(circle at top right, var(--neon-orange), transparent); align-items: flex-start; justify-content: flex-end; padding: 15px 15px 0 0; }
+        .cross-zone.bottom-right { bottom: 0; right: 0; width: 35%; height: 35%; background: radial-gradient(circle at bottom right, var(--neon-pink), transparent); align-items: flex-end; justify-content: flex-end; padding: 0 15px 15px 0; }
+        .cross-zone.bottom-left { bottom: 0; left: 0; width: 35%; height: 35%; background: radial-gradient(circle at bottom left, var(--neon-cyan), transparent); align-items: flex-end; justify-content: flex-start; padding: 0 0 15px 15px; }
+
+        .cross-zone.correct { background: var(--neon-green) !important; opacity: 0.8 !important; }
+        .cross-zone.wrong { background: var(--neon-red) !important; opacity: 0.8 !important; animation: wrongShake 0.4s ease; }
+
+        @keyframes scanline { 0%{top:-40%} 100%{top:100%} }
+        @keyframes pulseCell { 0%{transform:scale(0.92)} 60%{transform:scale(1.04)} 100%{transform:scale(1)} }
+        @keyframes correctFlash { 0%{transform:scale(1.08)} 100%{transform:scale(1)} }
+        @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+        /* Buttons & Panels */
+        .btn-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+        .btn {
+            font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; padding: 11px 18px; border: none; border-radius: 6px;
+            cursor: pointer; position: relative; overflow: hidden;
+            transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+
+        .btn-start    { background:linear-gradient(135deg,#003d57,#005a80); color:var(--neon-blue);   border:1px solid var(--neon-blue);   box-shadow:0 0 14px rgba(0,212,255,0.25); }
+        .btn-recall   { background:linear-gradient(135deg,#3d2000,#5a3000); color:var(--neon-yellow); border:1px solid var(--neon-yellow); box-shadow:0 0 14px rgba(255,229,0,0.2); }
+        .btn-rewatch  { background:linear-gradient(135deg,#1a002e,#2a0045); color:var(--neon-purple); border:1px solid var(--neon-purple); box-shadow:0 0 14px rgba(180,79,255,0.2); }
+        .btn-retry    { background:linear-gradient(135deg,#2a1500,#402000); color:var(--neon-orange); border:1px solid var(--neon-orange); box-shadow:0 0 14px rgba(255,140,0,0.2); }
+        .btn-restart  { background:linear-gradient(135deg,#002030,#003048); color:var(--neon-blue);   border:1px solid var(--neon-blue);   box-shadow:0 0 14px rgba(0,212,255,0.2); }
+        .btn-continue { background:linear-gradient(135deg,#003320,#005030); color:var(--neon-green);  border:1px solid var(--neon-green);  box-shadow:0 0 14px rgba(0,255,157,0.25); }
+
+        .btn-start:hover    { box-shadow:0 0 26px rgba(0,212,255,0.45); }
+        .btn-recall:hover   { box-shadow:0 0 26px rgba(255,229,0,0.4); }
+        .btn-rewatch:hover  { box-shadow:0 0 26px rgba(180,79,255,0.4); }
+        .btn-retry:hover    { box-shadow:0 0 26px rgba(255,140,0,0.4); }
+        .btn-restart:hover  { box-shadow:0 0 26px rgba(0,212,255,0.4); }
+        .btn-continue:hover { box-shadow:0 0 26px rgba(0,255,157,0.45); }
+
+        .select-panel {
+            background: var(--panel); border: 1px solid var(--neon-yellow);
+            border-radius: 12px; padding: 18px 20px; margin-top: 14px;
+            box-shadow: 0 0 18px rgba(255,229,0,0.08); text-align: center;
+        }
+        .select-panel .panel-title { color: var(--neon-yellow); }
+        .select-panel p { font-size: 13px; color: var(--text); margin-bottom: 12px; }
+        .select-panel select {
+            background: var(--bg2); color: var(--neon-yellow);
+            border: 1px solid rgba(255,229,0,0.4); border-radius: 6px;
+            padding: 9px 12px; font-family: 'Rajdhani',sans-serif;
+            font-size: 15px; font-weight: 600; margin-right: 8px;
+            cursor: pointer; appearance: none; -webkit-appearance: none;
+        }
+        .btn-confirm {
+            background: linear-gradient(135deg,#3d2e00,#5a4500); color: var(--neon-yellow);
+            border: 1px solid var(--neon-yellow); font-family: 'Orbitron',monospace;
+            font-size: 10px; letter-spacing: 2px; padding: 10px 18px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-confirm:hover { box-shadow: 0 0 18px rgba(255,229,0,0.4); }
+
+        .math-panel {
+            background: var(--panel); border: 1px solid var(--neon-green);
+            border-radius: 12px; padding: 18px 20px; margin-top: 14px;
+            box-shadow: 0 0 18px rgba(0,255,157,0.08); text-align: center;
+        }
+        .math-panel .panel-title { color: var(--neon-green); }
+        #math-question { font-size: 13px; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
+        .math-input-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #math-input {
+            width: 130px; background: var(--bg2); color: var(--neon-green);
+            border: 1px solid var(--neon-green); border-radius: 6px; padding: 10px;
+            font-family: 'Orbitron',monospace; font-size: 18px; font-weight: 700;
+            text-align: center; outline: none; box-shadow: 0 0 10px rgba(0,255,157,0.12);
+        }
+        #math-input:focus { box-shadow: 0 0 20px rgba(0,255,157,0.28); }
+        .btn-answer {
+            background: linear-gradient(135deg,#00200e,#003018); color: var(--neon-green);
+            border: 1px solid var(--neon-green); font-family: 'Orbitron',monospace;
+            font-size: 10px; letter-spacing: 2px; padding: 11px 18px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-answer:hover { box-shadow: 0 0 18px rgba(0,255,157,0.35); }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 420px) {
+            .settings-grid { grid-template-columns: 1fr; }
+            .setting-group.full { grid-column: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="subtitle">Cognitive Training System</div>
+        <h1>NEURAL <span>MATRIX</span></h1>
+        <div class="header-line"></div>
+    </div>
+
+    <!-- Intro -->
+    <div id="intro" class="panel">
+        <div class="panel-title">// BRIEFING</div>
+        <ul class="info-list">
+            <li>Pilih mode <strong>Visualisasi</strong> (Grid Klasik / Piano / Silang Dalam-Luar).</li>
+            <li>Klik <strong>MULAI</strong>. Perhatikan urutan angka/operasi beserta <strong>suaranya</strong>.</li>
+            <li>Hitung total di kepala secara <strong>Mental Math</strong> terus-menerus.</li>
+            <li>Kapanpun siap, tekan <strong>RECALL</strong> untuk berhenti dan menjawab.</li>
+            <li>Pilih Level, klik urutan posisi/jalurnya, lalu masukkan total hitunganmu!</li>
+        </ul>
+        <div class="settings-grid">
+            <div class="setting-group full">
+                <label>Mode Tingkat Kesulitan</label>
+                <select id="game-mode">
+                    <option value="1">Mode 1 — Angka 1 Digit (Mudah)</option>
+                    <option value="2">Mode 2 — Angka 2 Digit (Sedang)</option>
+                    <option value="3">Mode 3 — Pangkat &amp; Akar (Sulit)</option>
+                    <option value="4">Mode 4 — Operasi Beruntun (Ekstrem)</option>
+                    <option value="5">Mode 5 — Simulasi (Posisi Acak)</option>
+                    <option value="6" selected>Mode 6 — Simulasi (Posisi Tetap)</option>
+                </select>
+                <div class="mode-desc" id="mode-desc">Simulasi Operasi beruntun (Posisi Tetap)</div>
+            </div>
+            
+            <div class="setting-group full">
+                <label>Mode Visualisasi</label>
+                <select id="visual-mode">
+                    <option value="grid">Grid Matriks (Klasik)</option>
+                    <option value="piano">Piano Tiles (Jatuh Satu per Satu)</option>
+                    <option value="piano-flow">Piano Tiles (Arus Bertumpuk)</option>
+                    <option value="crossroad">4 Arah Tepi (Simpang 4 Bertumpuk)</option>
+                    <option value="crossroad-8">8 Arah Tepi (Simpang 8 Bertumpuk)</option>
+                    <option value="outward-4" selected>4 Arah Keluar (Dari Tengah ke Tepi)</option>
+                    <option value="outward-8">8 Arah Keluar (Dari Tengah ke Tepi)</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label id="grid-size-label">Arah / Ukuran</label>
+                <select id="grid-size" disabled>
+                    <option value="4" selected>4 Arah</option>
+                    <option value="4">4 Arah</option>
+                    <option value="4">4 Arah</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label>Interval Kemunculan</label>
+                <select id="game-speed">
+                    <option value="1000">1 Detik — Kilat</option>
+                    <option value="2000" selected>2 Detik — Normal</option>
+                    <option value="3000">3 Detik — Lambat</option>
+                    <option value="4000">4 Detik — Santai</option>
+                </select>
+            </div>
+            
+            <div class="setting-group full hidden" id="custom-group">
+                <label>Urutan Custom (Isi sesuai jumlah langkah)</label>
+                <div id="custom-inputs-container" class="custom-inputs-wrapper"></div>
+                <div class="mode-desc" style="margin-top:6px;">Gunakan <strong>v</strong> untuk akar (cth: +v16), <strong>3v</strong> untuk akar pangkat 3 (cth: x3v8). Ketik <strong>v</strong> / <strong>3v</strong> sendirian untuk mengakarkan total saat ini. <br><em>Tip: Kosongkan kotak jika ingin diacak otomatis.</em></div>
+            </div>
+            
+            <div class="setting-group">
+                <label>Jumlah Langkah</label>
+                <input type="number" id="game-steps" min="3" max="30" value="30">
+            </div>
+            <div class="setting-group">
+                <label>Jumlah Nyawa</label>
+                <select id="game-lives">
+                    <option value="1">1 Nyawa</option>
+                    <option value="3" selected>3 Nyawa</option>
+                    <option value="5">5 Nyawa</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="lives-display" class="hidden"></div>
+    <div id="timer-display" class="hidden">
+        <div id="mem-box" class="timer-box">MEMORI: <span id="mem-time">00:00</span></div>
+        <div id="rec-box" class="timer-box recall">RECALL: <span id="rec-time">00:00</span></div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar">
+        <div id="status-text">Siap menguji memori dan berhitung?</div>
+        <div id="recall-dots" class="recall-dots hidden"></div>
+        <div class="step-row">
+            <div class="step-badge" id="step-badge">STEP 0 / 30</div>
+            <div class="pct-label" id="pct-label">0%</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+
+    <!-- Main Game Area -->
+    <div id="game-area" class="game-area-wrapper hidden">
+        <div id="game-container"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+        <button id="btn-start"    class="btn btn-start"            onclick="startGame()">&#9654; MULAI BERMAIN</button>
+        <button id="btn-recall"   class="btn btn-recall   hidden"  onclick="triggerRecall()">&#9608; STOP &amp; RECALL</button>
+        <button id="btn-continue" class="btn btn-continue hidden"  onclick="continueWatching()">&#9654;&#9654; LANJUT HAFAL</button>
+        <button id="btn-rewatch"  class="btn btn-rewatch  hidden"  onclick="rewatchSequence()">&#8635; REWATCH</button>
+        <button id="btn-retry"    class="btn btn-retry    hidden"  onclick="retrySubmit()">&#8635; RETRY</button>
+        <button id="btn-restart"  class="btn btn-restart  hidden"  onclick="resetAndShowIntro()">&#8635; MAIN LAGI</button>
+    </div>
+
+    <!-- Level selection -->
+    <div id="level-selection-area" class="select-panel hidden">
+        <div class="panel-title">// PILIH LEVEL TANTANGAN</div>
+        <p id="level-seen-text">Kamu telah melihat 0 urutan. Tantang diri di level berapa?</p>
+        <select id="level-select"></select>
+        <button class="btn-confirm" onclick="confirmLevel()">KONFIRMASI &#9658;</button>
+    </div>
+
+    <!-- Math input -->
+    <div id="math-area" class="math-panel hidden">
+        <div class="panel-title">// KALKULASI AKHIR</div>
+        <p id="math-question">Berapa jumlah angka dari urutan tersebut?</p>
+        <div class="math-input-row">
+            <input type="text" inputmode="decimal" id="math-input" placeholder="?" onkeypress="handleEnter(event)">
+            <button class="btn-answer" onclick="checkMath()">JAWAB &#9658;</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- SISTEM AUDIO (SYNTHESIZER) ---
+    let audioCtx = null;
+    let globalZIndex = 100; // Untuk memastikan tiles tumpuk menumpuk dgn benar
+    
+    // Frekuensi nada
+    const notesFreq = [
+        261.63, 293.66, 329.63, 349.23, 392.00,
+        440.00, 493.88, 523.25, 587.33, 659.25,
+        698.46, 783.99, 880.00, 987.77, 1046.50,
+        1174.66, 1318.51, 1396.91, 1567.98, 1760.00,
+        1975.53, 2093.00, 2349.32, 2637.02, 2793.83
+    ];
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playTone(index) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle'; 
+        osc.frequency.value = notesFreq[index % notesFreq.length];
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function playErrorTone() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.value = 150;
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+    // ----------------------------------
+
+    let sequence = [], currentIndex = 0, highestIndexSeen = 0, intervalId = null;
+    let gameState = 'idle', selectedLevel = 1, currentRecallStep = 0;
+    let currentGridSize = 3, lives = 3, maxLives = 3, maxSteps = 30;
+    let checkpoints = [], highestScore = 0;
+    
+    // Timer Variables
+    let totalMemorizeTime = 0, memorizeStartTime = 0, memorizeTimerActive = false;
+    let totalRecallTime = 0, recallStartTime = 0, recallTimerActive = false;
+    let displayTimerId = null;
+
+    const complexItems = [
+        {v:4,t:"2^2"},{v:8,t:"2^3"},{v:16,t:"2^4"},{v:32,t:"2^5"},
+        {v:9,t:"3^2"},{v:27,t:"3^3"},{v:16,t:"4^2"},{v:25,t:"5^2"},
+        {v:2,t:"\\sqrt{4}"},{v:3,t:"\\sqrt{9}"},{v:4,t:"\\sqrt{36}"},
+        {v:5,t:"\\sqrt{25}"},{v:6,t:"\\sqrt{36}"},{v:7,t:"\\sqrt{49}"},
+        {v:8,t:"\\sqrt{64}"},{v:9,t:"\\sqrt{81}"},{v:10,t:"\\sqrt{100}"},
+        {v:2,t:"\\sqrt[3]{8}"},{v:3,t:"\\sqrt[3]{27}"},{v:4,t:"\\sqrt[3]{64}"},
+        {v:5,t:"\\sqrt[3]{125}"},{v:10,t:"\\sqrt[3]{1000}"}
+    ];
+
+    // Listeners for UI changes
+    document.getElementById('game-mode').addEventListener('change', e => {
+        const descs = {
+            '1':'Hanya angka 1–9. Total dijumlahkan. Cocok untuk pemanasan.',
+            '2':'Angka belasan hingga puluhan. Total dijumlahkan.',
+            '3':'Mengingat hasil bilangan berpangkat dan bentuk akar, lalu dijumlahkan.',
+            '4':'Angka muncul beserta operasi (+,–,×,÷). Hitung hasilnya secara berurutan!',
+            '5':'Simulasi Operasi beruntun (Posisi Acak)',
+            '6':'Simulasi Operasi beruntun (Posisi Tetap)'
+        };
+        document.getElementById('mode-desc').textContent = descs[e.target.value] || '';
+        const customGroup = document.getElementById('custom-group');
+        if (e.target.value === '5' || e.target.value === '6') {
+            customGroup.classList.add('hidden');
+        } else {
+            customGroup.classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('visual-mode').addEventListener('change', e => {
+        const label = document.getElementById('grid-size-label');
+        const select = document.getElementById('grid-size');
+        if (e.target.value === 'piano' || e.target.value === 'piano-flow') {
+            label.textContent = 'Jumlah Kolom (Lanes)';
+            select.options[0].text = '3 Kolom';
+            select.options[1].text = '4 Kolom';
+            select.options[2].text = '5 Kolom';
+            select.disabled = false;
+        } else if (e.target.value.startsWith('crossroad') || e.target.value.startsWith('outward')) {
+            label.textContent = 'Arah';
+            let isFourDir = (e.target.value === 'crossroad' || e.target.value === 'outward-4');
+            let dirText = isFourDir ? '4 Arah' : '8 Arah';
+            select.options[0].text = dirText;
+            select.options[1].text = dirText;
+            select.options[2].text = dirText;
+            select.value = isFourDir ? "4" : "8"; 
+            select.disabled = true;
+        } else {
+            label.textContent = 'Ukuran Grid';
+            select.options[0].text = '3×3 — 9 Kotak';
+            select.options[1].text = '4×4 — 16 Kotak';
+            select.options[2].text = '5×5 — 25 Kotak';
+            select.disabled = false;
+        }
+    });
+
+    function formatTime(ms) {
+        let totalSeconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+        return minutes > 0 ? `${minutes} menit ${seconds} detik` : `${seconds} detik`;
+    }
+
+    function formatTimeClock(ms) {
+        let totalSeconds = Math.floor(ms / 1000);
+        let m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        let s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function updateTimerUI() {
+        let currentMem = totalMemorizeTime;
+        if (memorizeTimerActive) currentMem += (Date.now() - memorizeStartTime);
+        let currentRec = totalRecallTime;
+        if (recallTimerActive) currentRec += (Date.now() - recallStartTime);
+        document.getElementById('mem-time').textContent = formatTimeClock(currentMem);
+        document.getElementById('rec-time').textContent = formatTimeClock(currentRec);
+    }
+
+    function startDisplayTimer() {
+        if (!displayTimerId) displayTimerId = setInterval(updateTimerUI, 200);
+    }
+    function stopDisplayTimer() {
+        if (displayTimerId) { clearInterval(displayTimerId); displayTimerId = null; }
+        updateTimerUI();
+    }
+
+    function updateCustomInputs() {
+        const container = document.getElementById('custom-inputs-container');
+        let steps = parseInt(document.getElementById('game-steps').value);
+        if (isNaN(steps) || steps < 3) steps = 3;
+        if (steps > 30) steps = 30;
+
+        const currentInputs = Array.from(container.querySelectorAll('.custom-step-input')).map(inp => inp.value);
+        container.innerHTML = '';
+
+        for (let i = 0; i < steps; i++) {
+            const input = document.createElement('input');
+            input.type = 'text'; input.className = 'custom-step-input'; input.placeholder = `L-${i+1}`;
+            if (currentInputs[i] !== undefined) input.value = currentInputs[i];
+            container.appendChild(input);
+        }
+    }
+    document.getElementById('game-steps').addEventListener('input', updateCustomInputs);
+    document.getElementById('game-steps').addEventListener('change', updateCustomInputs);
+    window.addEventListener('DOMContentLoaded', updateCustomInputs);
+
+    function updateProgress() {
+        const pct = Math.round((currentIndex/maxSteps)*100);
+        document.getElementById('progress-fill').style.width = pct+'%';
+        document.getElementById('step-badge').textContent = `STEP ${currentIndex} / ${maxSteps}`;
+        document.getElementById('pct-label').textContent = pct+'%';
+    }
+
+    function renderLives() {
+        const el = document.getElementById('lives-display');
+        if (maxLives <= 0) { el.classList.add('hidden'); return; }
+        el.classList.remove('hidden');
+        let html = '<span style="font-family:Orbitron,monospace;font-size:9px;letter-spacing:3px;margin-right:8px;">LIVES</span>';
+        for (let i=0;i<maxLives;i++) html+=`<span class="heart${i>=lives?' lost':''}">&#9829;</span>`;
+        el.innerHTML = html;
+    }
+
+    // Handles DOM Creation for Grid, Piano, Crossroad, or Outward Mode
+    function createGrid() {
+        const visualMode = document.getElementById('visual-mode').value;
+        const container = document.getElementById('game-container');
+        container.innerHTML = '';
+        container.className = '';
+
+        if (visualMode === 'grid') {
+            container.className = `grid-container grid-${currentGridSize}`;
+            for (let i=0; i<currentGridSize*currentGridSize; i++) {
+                const cell = document.createElement('div');
+                cell.className='cell'; cell.id='cell-'+i;
+                cell.innerHTML=`<span class="cell-num">${i+1}</span><div class="cell-inner"></div>`;
+                cell.onclick=()=>onCellClick(i);
+                container.appendChild(cell);
+            }
+        } else if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            container.className = 'crossroad-wrapper';
+            
+            let html = '';
+            
+            // Marker Spawn
+            if (visualMode.startsWith('crossroad')) {
+                // Tepi-tepi untuk crossroad
+                html += `
+                    <div class="cross-spawn dir-0"></div>
+                    <div class="cross-spawn dir-1"></div>
+                    <div class="cross-spawn dir-2"></div>
+                    <div class="cross-spawn dir-3"></div>
+                `;
+                if (visualMode === 'crossroad-8') {
+                    html += `
+                        <div class="cross-spawn dir-4"></div>
+                        <div class="cross-spawn dir-5"></div>
+                        <div class="cross-spawn dir-6"></div>
+                        <div class="cross-spawn dir-7"></div>
+                    `;
+                }
+            } else {
+                // Sentral portal untuk outward
+                html += `<div class="center-spawn"></div>`;
+            }
+
+            // Zona Klik untuk Recall (berlaku untuk crossroad maupun outward)
+            html += `
+                <div class="cross-zone top" id="cross-0" onclick="onCellClick(0)">ATAS</div>
+                <div class="cross-zone right" id="cross-1" onclick="onCellClick(1)">KANAN</div>
+                <div class="cross-zone bottom" id="cross-2" onclick="onCellClick(2)">BAWAH</div>
+                <div class="cross-zone left" id="cross-3" onclick="onCellClick(3)">KIRI</div>
+            `;
+            if (visualMode.endsWith('8')) {
+                html += `
+                    <div class="cross-zone corner top-left" id="cross-4" onclick="onCellClick(4)">KIRI<br>ATAS</div>
+                    <div class="cross-zone corner top-right" id="cross-5" onclick="onCellClick(5)">KANAN<br>ATAS</div>
+                    <div class="cross-zone corner bottom-right" id="cross-6" onclick="onCellClick(6)">KANAN<br>BAWAH</div>
+                    <div class="cross-zone corner bottom-left" id="cross-7" onclick="onCellClick(7)">KIRI<br>BAWAH</div>
+                `;
+            }
+            container.innerHTML = html;
+
+        } else {
+            // Berlaku untuk 'piano' dan 'piano-flow'
+            container.className = 'piano-wrapper' + (visualMode === 'piano-flow' ? ' flow' : '');
+            for (let i=0; i<currentGridSize; i++) {
+                const lane = document.createElement('div');
+                lane.className = 'piano-lane';
+                lane.id = 'lane-'+i;
+                lane.onclick = () => onCellClick(i);
+                lane.innerHTML = `
+                    <div class="spawn-marker"></div>
+                    <div class="lane-label">LANE ${i+1}</div>
+                `;
+                container.appendChild(lane);
+            }
+        }
+    }
+
+    function setCellContent(cellEl, text, isLatex) {
+        const inner = cellEl.querySelector('.cell-inner');
+        if (!inner) return;
+        if (isLatex) {
+            try { katex.render(text, inner, {throwOnError:false, displayMode:false}); }
+            catch(e) { inner.textContent = text; }
+        } else { inner.textContent = text; }
+    }
+
+    function parseCustomNumber(str) {
+        let s = str.replace(',', '.').trim();
+        if (s.includes('/')) {
+            let p = s.split('/');
+            return parseFloat(p[0]) / parseFloat(p[1]);
+        }
+        return parseFloat(s);
+    }
+
+    // Animasi Dari Tepi Ke Seberang (Crossroad)
+    function getCrossroadAnim(pos) {
+        if (pos === 0) return [ {top: '-25%', left: '50%', transform: 'translate(-50%, -50%)'}, {top: '125%', left: '50%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 1) return [ {top: '50%', left: '125%', transform: 'translate(-50%, -50%)'}, {top: '50%', left: '-25%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 2) return [ {top: '125%', left: '50%', transform: 'translate(-50%, -50%)'}, {top: '-25%', left: '50%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 3) return [ {top: '50%', left: '-25%', transform: 'translate(-50%, -50%)'}, {top: '50%', left: '125%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 4) return [ {top: '-25%', left: '-25%', transform: 'translate(-50%, -50%)'}, {top: '125%', left: '125%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 5) return [ {top: '-25%', left: '125%', transform: 'translate(-50%, -50%)'}, {top: '125%', left: '-25%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 6) return [ {top: '125%', left: '125%', transform: 'translate(-50%, -50%)'}, {top: '-25%', left: '-25%', transform: 'translate(-50%, -50%)'} ];
+        if (pos === 7) return [ {top: '125%', left: '-25%', transform: 'translate(-50%, -50%)'}, {top: '-25%', left: '125%', transform: 'translate(-50%, -50%)'} ];
+        return [];
+    }
+
+    // Animasi Dari Tengah Ke Tepi/Sudut (Outward)
+    function getOutwardAnim(pos) {
+        let endTop, endLeft;
+        if (pos === 0) { endTop = '-25%'; endLeft = '50%'; }
+        if (pos === 1) { endTop = '50%'; endLeft = '125%'; }
+        if (pos === 2) { endTop = '125%'; endLeft = '50%'; }
+        if (pos === 3) { endTop = '50%'; endLeft = '-25%'; }
+        if (pos === 4) { endTop = '-25%'; endLeft = '-25%'; }
+        if (pos === 5) { endTop = '-25%'; endLeft = '125%'; }
+        if (pos === 6) { endTop = '125%'; endLeft = '125%'; }
+        if (pos === 7) { endTop = '125%'; endLeft = '-25%'; }
+        return [
+            {top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0},
+            {top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(0.8)', opacity: 1, offset: 0.1},
+            {top: endTop, left: endLeft, transform: 'translate(-50%, -50%) scale(1)'}
+        ];
+    }
+
+    function generateSequence() {
+        sequence = []; let lastPos=-1; let lastPos2=-1;
+        const mode = document.getElementById('game-mode').value;
+        const visualMode = document.getElementById('visual-mode').value;
+        
+        // Posisi berdasarkan mode
+        let totalPositions = (currentGridSize * currentGridSize);
+        if (visualMode === 'piano' || visualMode === 'piano-flow') totalPositions = currentGridSize;
+        if (visualMode === 'crossroad' || visualMode === 'outward-4') totalPositions = 4;
+        if (visualMode === 'crossroad-8' || visualMode === 'outward-8') totalPositions = 8; 
+
+        let runTotal = 0;
+
+        const customInputsElements = document.querySelectorAll('.custom-step-input');
+        const customInputs = Array.from(customInputsElements).map(el => el.value.trim());
+
+        const fixedPos3x3 = [0, 8, 2, 6, 4, 1, 7, 5, 2, 8, 3, 0, 6, 1, 4, 7, 3, 5];
+        const fixedPos4x4 = [0, 15, 3, 12, 5, 10, 2, 8, 14, 1, 7, 11, 4, 13, 6, 9];
+        const fixedPos5x5 = [0, 24, 4, 20, 12, 7, 18, 1, 14, 22, 9, 16, 3, 11, 23, 5];
+        
+        const fixedPiano3 = [0, 2, 1, 0, 0, 2, 1, 1, 2, 0, 2, 1];
+        const fixedPiano4 = [0, 3, 1, 2, 2, 0, 3, 1, 1, 2, 0, 3];
+        const fixedPiano5 = [0, 4, 1, 3, 2, 2, 0, 4, 1, 3, 4, 2];
+
+        // Mode 6: Urutan rotasi 30 Langkah (Posisi Tetap 4 Arah Tepi)
+        const fixedCrossroad = [0, 2, 1, 3, 0, 1, 2, 3, 1, 0, 2, 0, 3, 1, 2, 1, 3, 0, 2, 3, 0, 1, 3, 2, 0, 2, 1, 0, 3, 2];
+        const fixedCrossroad8 = [0, 4, 1, 5, 2, 6, 3, 7, 4, 1, 6, 3];
+
+        if (mode === '5' || mode === '6') {
+            const simOps = [
+                { text: "\\sqrt[3]{512}", calc: t => 8 }, { text: "+\\,42", calc: t => t + 42 },
+                { text: ":\\,\\frac{1}{2}", calc: t => t / 0.5 }, { text: "-\\,72", calc: t => t - 72 },
+                { text: "-\\,(-32)", calc: t => t - (-32) }, { text: "-\\,\\sqrt{16}", calc: t => t - 4 },
+                { text: "\\times\\,2", calc: t => t * 2 }, { text: "+\\,92", calc: t => t + 92 },
+                { text: "+\\,52", calc: t => t + 52 }, { text: "\\sqrt{\\dots}", calc: t => Math.sqrt(Math.max(0, t)) },
+                { text: "\\times\\,\\frac{1}{5}", calc: t => t * 0.2 }, { text: "\\times\\,225", calc: t => t * 225 },
+                { text: "\\div\\,15", calc: t => t / 15 }, { text: "+\\,25", calc: t => t + 25 },
+                { text: "-\\,(-48)", calc: t => t - (-48) }, { text: ":\\,\\frac{1}{6}", calc: t => t / (1/6) },
+                { text: "-\\,(-38)", calc: t => t - (-38) }, { text: "+\\,27", calc: t => t + 27 },
+                { text: "-\\,5", calc: t => t - 5 }, { text: ":\\,66", calc: t => t / 66 },
+                { text: "\\times\\,\\sqrt{64}", calc: t => t * 8 }, { text: "-\\,(-20)", calc: t => t - (-20) },
+                { text: "+\\,827", calc: t => t + 827 }, { text: "\\times\\,\\frac{1}{3}", calc: t => t / 3 },
+                { text: "-\\,59", calc: t => t - 59 }, { text: "-\\,53", calc: t => t - 53 },
+                { text: "\\times\\,8", calc: t => t * 8 }, { text: "\\times\\,3{,}25", calc: t => t * 3.25 },
+                { text: "-\\,125", calc: t => t - 125 }, { text: ":\\,5", calc: t => t / 5 }
+            ];
+            
+            for (let i = 0; i < maxSteps; i++) {
+                let pos;
+                if (mode === '6') {
+                    if (visualMode === 'grid') {
+                        if (currentGridSize === 3) pos = fixedPos3x3[i % fixedPos3x3.length];
+                        else if (currentGridSize === 4) pos = fixedPos4x4[i % fixedPos4x4.length];
+                        else pos = fixedPos5x5[i % fixedPos5x5.length];
+                    } else if (visualMode === 'crossroad' || visualMode === 'outward-4') {
+                        pos = fixedCrossroad[i % fixedCrossroad.length];
+                    } else if (visualMode === 'crossroad-8' || visualMode === 'outward-8') {
+                        pos = fixedCrossroad8[i % fixedCrossroad8.length];
+                    } else {
+                        if (currentGridSize === 3) pos = fixedPiano3[i % fixedPiano3.length];
+                        else if (currentGridSize === 4) pos = fixedPiano4[i % fixedPiano4.length];
+                        else pos = fixedPiano5[i % fixedPiano5.length];
+                    }
+                } else {
+                    if (visualMode === 'piano' || visualMode === 'piano-flow' || visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+                        // Boleh di arah yg sama maks 2 kali beruntun
+                        do { pos=Math.floor(Math.random()*totalPositions); } while(pos===lastPos && pos===lastPos2);
+                    } else {
+                        // Grid mode: tidak boleh beruntun sama sekali
+                        do { pos=Math.floor(Math.random()*totalPositions); } while(pos===lastPos);
+                    }
+                    lastPos2=lastPos; lastPos=pos;
+                }
+
+                const op = simOps[i % simOps.length];
+                runTotal = op.calc(runTotal);
+                runTotal = Math.round(runTotal * 10000) / 10000;
+                sequence.push({pos, text: "\\boldsymbol{" + op.text + "}", useLatex: true, stepTotal: runTotal});
+            }
+        } else {
+            for (let i = 0; i < maxSteps; i++) {
+                let pos; 
+                if (visualMode === 'piano' || visualMode === 'piano-flow' || visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+                    do { pos=Math.floor(Math.random()*totalPositions); } while(pos===lastPos && pos===lastPos2);
+                } else {
+                    do { pos=Math.floor(Math.random()*totalPositions); } while(pos===lastPos);
+                }
+                lastPos2=lastPos; lastPos=pos;
+                
+                let rawText = customInputs[i] || '';
+                let text = ''; let useLatex = false; let lowerText = rawText.toLowerCase();
+
+                if (rawText !== '') {
+                    if (lowerText === 'v' || lowerText === 'sqrt' || lowerText === 'akar') {
+                        runTotal = Math.sqrt(Math.max(0, runTotal)); text = "\\sqrt{\\dots}"; useLatex = true;
+                    } else if (lowerText === '3v' || lowerText === 'cbrt' || lowerText === 'akar3') {
+                        runTotal = Math.cbrt(runTotal); text = "\\sqrt[3]{\\dots}"; useLatex = true;
+                    } else if (mode === '4') {
+                        useLatex = true;
+                        let opMatch = rawText.match(/^([+\-x*\/:]?)\s*(.+)$/i);
+                        if (opMatch) {
+                            let op = opMatch[1].toLowerCase(); let valText = opMatch[2].toLowerCase();
+                            let val = 0; let valLatex = valText;
+                            if (valText.startsWith('v')) {
+                                let num = parseCustomNumber(valText.replace(/^v/, ''));
+                                if(!isNaN(num)) { val = Math.sqrt(num); valLatex = `\\sqrt{${num}}`; }
+                            } else {
+                                val = parseCustomNumber(valText);
+                                if (isNaN(val)) val = 0;
+                                valLatex = valText.replace('.', '{,}');
+                            }
+                            if (op === '+') { runTotal += val; text = `+\\,${valLatex}`; } 
+                            else if (op === '-') { runTotal -= val; text = `-\\,${valLatex}`; } 
+                            else if (op === 'x' || op === '*') { runTotal *= val; text = `\\times\\,${valLatex}`; } 
+                            else if (op === '/' || op === ':') { runTotal /= val; text = `\\div\\,${valLatex}`; } 
+                            else { runTotal = val; text = valLatex; }
+                        } else { runTotal = 0; text = rawText; }
+                    } else {
+                        let val = parseCustomNumber(rawText); text = rawText.replace('.', ',');
+                        if (!isNaN(val)) runTotal += val;
+                    }
+                } else {
+                    let val;
+                    if (mode==='1') {
+                        val=Math.floor(Math.random()*9)+1; text=val.toString(); runTotal+=val;
+                    } else if (mode==='2') {
+                        val=Math.floor(Math.random()*90)+10; text=val.toString(); runTotal+=val;
+                    } else if (mode==='3') {
+                        const item=complexItems[Math.floor(Math.random()*complexItems.length)];
+                        val=item.v; text=item.t; useLatex=true; runTotal+=val;
+                    } else if (mode==='4') {
+                        useLatex = true; 
+                        if (i===0) {
+                            val=Math.floor(Math.random()*20)+1; text=val.toString(); runTotal=val;
+                        } else {
+                            const ops=['+','-'];
+                            if (runTotal>-50&&runTotal<=50) ops.push('x');
+                            if (runTotal%2===0) ops.push(':2');
+                            const op=ops[Math.floor(Math.random()*ops.length)];
+                            if (op==='+') { val=Math.floor(Math.random()*20)+1; text='+\\,'+val; runTotal+=val; } 
+                            else if (op==='-') { val=Math.floor(Math.random()*20)+1; text='-\\,'+val; runTotal-=val; } 
+                            else if (op==='x') { val=[2,3,4,5][Math.floor(Math.random()*4)]; text='\\times\\,'+val; runTotal*=val; } 
+                            else { text=Math.random()>0.5?'\\div\\,2':'\\times\\,\\tfrac{1}{2}'; runTotal/=2; }
+                        }
+                    }
+                }
+                runTotal = Math.round(runTotal * 10000) / 10000;
+                if (useLatex) text = "\\boldsymbol{" + text + "}";
+                sequence.push({pos, text, useLatex, stepTotal: runTotal});
+            }
+        }
+    }
+
+    function renderRecallDots() {
+        const container = document.getElementById('recall-dots');
+        container.innerHTML = '';
+        for(let i=0; i<selectedLevel; i++) {
+            container.innerHTML += `<div class="recall-dot" id="dot-${i}"></div>`;
+        }
+        container.classList.remove('hidden');
+    }
+
+    function startGame() {
+        initAudio();
+        document.getElementById('intro').style.display='none';
+        
+        let inputSteps = parseInt(document.getElementById('game-steps').value);
+        if (isNaN(inputSteps) || inputSteps < 3) inputSteps = 3;
+        if (inputSteps > 30) inputSteps = 30;
+        maxSteps = inputSteps;
+
+        currentGridSize=parseInt(document.getElementById('grid-size').value)||3;
+        maxLives=parseInt(document.getElementById('game-lives').value)||3;
+        lives=maxLives;
+        
+        generateSequence(); 
+        createGrid(); resetUI(); renderLives(); 
+        checkpoints = []; 
+        globalZIndex = 100; // Reset z-index
+        
+        document.getElementById('game-area').classList.remove('hidden');
+        
+        totalMemorizeTime = 0; totalRecallTime = 0;
+        memorizeStartTime = Date.now(); memorizeTimerActive = true; recallTimerActive = false;
+        document.getElementById('timer-display').classList.remove('hidden');
+        document.getElementById('mem-box').classList.add('active');
+        document.getElementById('rec-box').classList.remove('active');
+        startDisplayTimer();
+
+        gameState='watching'; currentIndex=0; highestIndexSeen=0; updateProgress();
+        const mode=document.getElementById('game-mode').value;
+        document.getElementById('status-text').textContent=(mode==='4'||mode==='5'||mode==='6')
+            ?'Hitung operasi beruntunnya di kepala!'
+            :'Perhatikan urutan nyala/jatuh dan jumlahkan angkanya!';
+        document.getElementById('status-text').style.color='var(--text)';
+        document.getElementById('btn-start').classList.add('hidden');
+        document.getElementById('btn-recall').classList.remove('hidden');
+        playNextInSequence();
+    }
+
+    function playNextInSequence() {
+        if (gameState !== 'watching') return;
+        if (currentIndex >= maxSteps) { currentIndex = 0; }
+
+        const visualMode = document.getElementById('visual-mode').value;
+        const spawnInterval = parseInt(document.getElementById('game-speed').value) || 2000;
+
+        if (visualMode === 'grid') {
+            clearGrid();
+            setTimeout(()=>{
+                if (gameState !== 'watching') return;
+                const item = sequence[currentIndex];
+                const cell = document.getElementById('cell-'+item.pos);
+                setCellContent(cell, item.text, item.useLatex);
+                cell.classList.add('active');
+                
+                playTone(item.pos);
+                
+                currentIndex++; 
+                if (currentIndex > highestIndexSeen) highestIndexSeen = currentIndex;
+                updateProgress();
+                intervalId = setTimeout(playNextInSequence, spawnInterval);
+            }, 250);
+            
+        } else if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            // MODE SIMPANG & OUTWARD
+            if (gameState !== 'watching') return;
+            const item = sequence[currentIndex];
+            const container = document.getElementById('game-container');
+
+            const tile = document.createElement('div');
+            tile.className = `cross-tile dir-${item.pos}`;
+            tile.style.zIndex = globalZIndex++; // Belakangan = di atas
+            
+            const inner = document.createElement('div');
+            inner.className = 'cell-inner';
+            tile.appendChild(inner);
+            container.appendChild(tile);
+
+            if (item.useLatex) {
+                try { katex.render(item.text, inner, {throwOnError:false, displayMode:false}); }
+                catch(e) { inner.textContent = item.text; }
+            } else {
+                inner.textContent = item.text;
+            }
+
+            let animKeyframes = visualMode.startsWith('crossroad') ? getCrossroadAnim(item.pos) : getOutwardAnim(item.pos);
+            const fallDuration = 5000; // Selalu bertumpuk / lambat seperti arus
+
+            const anim = tile.animate(animKeyframes, {
+                duration: fallDuration, easing: 'linear', fill: 'forwards'
+            });
+
+            currentIndex++; 
+            if (currentIndex > highestIndexSeen) highestIndexSeen = currentIndex;
+            updateProgress();
+
+            // Lanjut tile berikutnya
+            intervalId = setTimeout(() => {
+                playNextInSequence();
+            }, spawnInterval);
+
+            // Menghapus tile & membunyikan suara khusus
+            setTimeout(() => {
+                if (gameState === 'watching') {
+                    // Sebarkan tone index untuk menampung 8 arah (0, 3, 6, 9, 12, 15, 18, 21)
+                    const toneIndex = item.pos * 3; 
+                    playTone(toneIndex);
+                }
+                if (container.contains(tile)) container.removeChild(tile);
+            }, fallDuration);
+
+        } else {
+            // MODE PIANO & PIANO FLOW
+            if (gameState !== 'watching') return;
+            const item = sequence[currentIndex];
+            const lane = document.getElementById('lane-'+item.pos);
+
+            const tile = document.createElement('div');
+            tile.className = 'piano-tile';
+            const inner = document.createElement('div');
+            inner.className = 'cell-inner';
+            tile.appendChild(inner);
+            lane.appendChild(tile);
+
+            if (item.useLatex) {
+                try { katex.render(item.text, inner, {throwOnError:false, displayMode:false}); }
+                catch(e) { inner.textContent = item.text; }
+            } else {
+                inner.textContent = item.text;
+            }
+
+            let fallDuration = spawnInterval;
+            if (visualMode === 'piano-flow') {
+                fallDuration = 5000; 
+            }
+
+            const anim = tile.animate([
+                { top: '-100px' },
+                { top: '100%' }
+            ], {
+                duration: fallDuration,
+                easing: 'linear',
+                fill: 'forwards'
+            });
+
+            currentIndex++; 
+            if (currentIndex > highestIndexSeen) highestIndexSeen = currentIndex;
+            updateProgress();
+
+            intervalId = setTimeout(() => {
+                playNextInSequence();
+            }, spawnInterval);
+
+            setTimeout(() => {
+                if (gameState === 'watching') {
+                    playTone(item.pos);
+                }
+                if (lane.contains(tile)) lane.removeChild(tile);
+            }, fallDuration);
+        }
+    }
+
+    function triggerRecall() {
+        if (highestIndexSeen === 0) return; 
+
+        const lastCheckpoint = checkpoints.length > 0 ? checkpoints[checkpoints.length-1].level : 0;
+        const minLevel = lastCheckpoint + 1;
+        if (highestIndexSeen < minLevel) return;
+
+        if (memorizeTimerActive) {
+            totalMemorizeTime += (Date.now() - memorizeStartTime);
+            memorizeTimerActive = false;
+        }
+        document.getElementById('mem-box').classList.remove('active');
+
+        clearTimeout(intervalId); gameState='selecting_level'; clearGrid();
+        
+        document.getElementById('game-area').classList.add('hidden');
+        
+        document.getElementById('btn-recall').classList.add('hidden');
+        document.getElementById('recall-dots').classList.add('hidden');
+
+        document.getElementById('status-text').textContent=`Siap untuk Recall. Tentukan level tantanganmu!`;
+        const ls=document.getElementById('level-select'); ls.innerHTML='';
+        for (let i=minLevel;i<=highestIndexSeen;i++) {
+            const o=document.createElement('option'); o.value=i;
+            o.textContent=`Level ${i} (${i} langkah)`;
+            ls.appendChild(o);
+        }
+        ls.value=highestIndexSeen;
+        document.getElementById('level-seen-text').textContent = `Pilih level yang ingin kamu buktikan hafalannya.`;
+        document.getElementById('level-selection-area').classList.remove('hidden');
+    }
+
+    function confirmLevel() {
+        selectedLevel=parseInt(document.getElementById('level-select').value);
+        document.getElementById('level-selection-area').classList.add('hidden');
+        
+        document.getElementById('game-area').classList.remove('hidden');
+
+        gameState='recalling_pos'; currentRecallStep=0;
+        
+        const visualMode = document.getElementById('visual-mode').value;
+        let modeText = 'urutan posisi kotak';
+        if (visualMode === 'piano' || visualMode === 'piano-flow') modeText = 'urutan lajur/kolom yang jatuh';
+        if (visualMode.startsWith('crossroad')) {
+            modeText = 'arah datangnya';
+            document.getElementById('game-container').classList.add('recall-active');
+        }
+        if (visualMode.startsWith('outward')) {
+            modeText = 'arah perginya (Tepi/Sudut)';
+            document.getElementById('game-container').classList.add('recall-active');
+        }
+
+        document.getElementById('status-text').textContent=`Recall Visual — Klik ${modeText}!`;
+        document.getElementById('status-text').style.color='var(--text)';
+        
+        renderRecallDots(); 
+        recallStartTime = Date.now(); recallTimerActive = true;
+        document.getElementById('rec-box').classList.add('active');
+    }
+
+    function onCellClick(pos) {
+        if (gameState!=='recalling_pos') return;
+        const targetPos = sequence[currentRecallStep].pos;
+        const visualMode = document.getElementById('visual-mode').value;
+        
+        let cellId = 'cell-'+pos;
+        if (visualMode === 'piano' || visualMode === 'piano-flow') cellId = 'lane-'+pos;
+        if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) cellId = 'cross-'+pos;
+        
+        const cell = document.getElementById(cellId);
+
+        // --- ANIMASI TILE BERGERAK SAAT RECALL ---
+        const isCorrect = pos === targetPos;
+        
+        // Sesuaikan durasi kecepatan dengan saat fase menghafal
+        const spawnInterval = parseInt(document.getElementById('game-speed').value) || 2000;
+        let animDuration = spawnInterval;
+        if (visualMode === 'piano-flow' || visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            animDuration = 5000;
+        }
+
+        if (visualMode === 'piano' || visualMode === 'piano-flow') {
+            const fbTile = document.createElement('div');
+            fbTile.className = 'piano-tile';
+            cell.appendChild(fbTile);
+            
+            fbTile.animate([
+                { top: '-70px' },
+                { top: '100%' }
+            ], { duration: animDuration, easing: 'linear', fill: 'forwards' });
+            
+            setTimeout(() => {
+                if (cell.contains(fbTile)) cell.removeChild(fbTile);
+            }, animDuration);
+
+        } else if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            const container = document.getElementById('game-container');
+            const fbTile = document.createElement('div');
+            fbTile.className = `cross-tile dir-${pos}`;
+            fbTile.style.zIndex = globalZIndex++;
+            container.appendChild(fbTile);
+
+            let animKeyframes = visualMode.startsWith('crossroad') ? getCrossroadAnim(pos) : getOutwardAnim(pos);
+
+            fbTile.animate(animKeyframes, { duration: animDuration, easing: 'linear', fill: 'forwards' });
+
+            setTimeout(() => {
+                if (container.contains(fbTile)) container.removeChild(fbTile);
+            }, animDuration);
+        }
+
+        if (pos===targetPos) {
+            if(visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+                playTone(targetPos * 3);
+            } else {
+                playTone(targetPos);
+            }
+
+            cell.classList.add('correct');
+            const dot = document.getElementById('dot-'+currentRecallStep);
+            if(dot) dot.classList.add('active');
+
+            setTimeout(()=>{ if(gameState==='recalling_pos') cell.classList.remove('correct'); },300);
+            currentRecallStep++;
+            document.getElementById('status-text').textContent=`✓ Sempurna! (${currentRecallStep}/${selectedLevel})`;
+            if (currentRecallStep>=selectedLevel) setTimeout(startMathPhase, 450);
+        } else {
+            playErrorTone();
+
+            cell.classList.add('wrong');
+            
+            if (recallTimerActive) {
+                totalRecallTime += (Date.now() - recallStartTime);
+                recallTimerActive = false;
+            }
+            document.getElementById('rec-box').classList.remove('active');
+
+            let timeStrMem = formatTime(totalMemorizeTime);
+            let timeStrRec = formatTime(totalRecallTime);
+
+            lives--; renderLives(); gameState='end';
+            const msg=`Urutan visual salah.`;
+            if (lives>0) {
+                document.getElementById('status-text').textContent=msg+'\nMau Rewatch urutan, atau langsung Retry?';
+                document.getElementById('status-text').style.color='var(--neon-red)';
+                document.getElementById('btn-rewatch').classList.remove('hidden');
+                document.getElementById('btn-retry').classList.remove('hidden');
+            } else {
+                document.getElementById('status-text').textContent=msg+`\nNyawa Habis! GAME OVER.\n⏱️ Memori: ${timeStrMem} | ⏱️ Recall: ${timeStrRec}`;
+                document.getElementById('status-text').style.color='var(--neon-red)';
+                document.getElementById('btn-restart').classList.remove('hidden');
+            }
+        }
+    }
+
+    function startMathPhase() {
+        gameState='answering_math'; clearGrid();
+        
+        document.getElementById('game-area').classList.add('hidden');
+        
+        if(document.getElementById('game-container')) {
+            document.getElementById('game-container').classList.remove('recall-active');
+        }
+
+        document.getElementById('recall-dots').classList.add('hidden'); 
+        document.getElementById('status-text').textContent='Ingatan visual akurat! Sekarang masukkan hasil hitunganmu.';
+        document.getElementById('status-text').style.color='var(--neon-green)';
+        const mode=document.getElementById('game-mode').value;
+        document.getElementById('math-question').textContent=(mode==='4'||mode==='5'||mode==='6')
+            ?`Berapa HASIL AKHIR dari operasi beruntun yang kamu ingat?`
+            :`Berapa TOTAL dari seluruh angka yang muncul?`;
+        document.getElementById('math-input').value='';
+        document.getElementById('math-area').classList.remove('hidden');
+        document.getElementById('math-input').focus();
+    }
+
+    function checkMath() {
+        const rawInput = document.getElementById('math-input').value.trim().replace(',', '.');
+        if (rawInput === '') return;
+        
+        if (recallTimerActive) {
+            totalRecallTime += (Date.now() - recallStartTime);
+            recallTimerActive = false;
+        }
+        document.getElementById('rec-box').classList.remove('active');
+
+        let timeStrMem = formatTime(totalMemorizeTime);
+        let timeStrRec = formatTime(totalRecallTime);
+
+        const correct = sequence[selectedLevel-1].stepTotal;
+        const user = parseFloat(rawInput);
+        document.getElementById('math-area').classList.add('hidden');
+
+        const correctRounded = Math.round(correct * 100) / 100;
+
+        if (!isNaN(user) && Math.abs(user - correctRounded) <= 0.01) {
+            playTone(15); 
+            setTimeout(() => playTone(17), 150);
+
+            if (selectedLevel > highestScore) highestScore = selectedLevel;
+            checkpoints.push({level: selectedLevel, total: correctRounded});
+
+            if (selectedLevel >= maxSteps) {
+                document.getElementById('status-text').textContent=`\u2b50 MASTER! Kamu berhasil menyelesaikan tantangan penuh.\n⏱️ Memori: ${timeStrMem} | ⏱️ Recall: ${timeStrRec}`;
+                document.getElementById('status-text').style.color='var(--neon-green)';
+                gameState='end';
+                document.getElementById('btn-restart').classList.remove('hidden');
+            } else {
+                document.getElementById('status-text').textContent = `\u2705 Perhitungan Akurat!\nIngin lanjut menghafal urutan berikutnya?`;
+                document.getElementById('status-text').style.color='var(--neon-green)';
+                gameState='between_rounds';
+                document.getElementById('btn-continue').classList.remove('hidden');
+                document.getElementById('btn-restart').classList.remove('hidden');
+            }
+        } else {
+            playErrorTone();
+
+            lives--; renderLives(); gameState='end';
+            if (lives>0) {
+                document.getElementById('status-text').textContent='Hasil perhitungan kurang tepat.\nCoba lagi dengan Rewatch atau Retry.';
+                document.getElementById('status-text').style.color='var(--neon-red)';
+                document.getElementById('btn-rewatch').classList.remove('hidden');
+                document.getElementById('btn-retry').classList.remove('hidden');
+            } else {
+                document.getElementById('status-text').textContent=`Perhitungan salah.\nNyawa Habis! GAME OVER.\n⏱️ Memori: ${timeStrMem} | ⏱️ Recall: ${timeStrRec}`;
+                document.getElementById('status-text').style.color='var(--neon-red)';
+                document.getElementById('btn-restart').classList.remove('hidden');
+            }
+        }
+    }
+
+    function continueWatching() {
+        initAudio(); 
+        document.getElementById('btn-continue').classList.add('hidden');
+        document.getElementById('btn-restart').classList.add('hidden');
+        currentIndex = 0; highestIndexSeen = 0; gameState = 'watching';
+        globalZIndex = 100;
+        
+        memorizeStartTime = Date.now(); memorizeTimerActive = true;
+        document.getElementById('mem-box').classList.add('active');
+
+        document.getElementById('game-area').classList.remove('hidden');
+
+        clearGrid();
+        document.getElementById('status-text').textContent = `Lanjut! Tonton sampai kamu siap Recall lebih jauh.`;
+        document.getElementById('status-text').style.color = 'var(--text)';
+        document.getElementById('btn-recall').classList.remove('hidden');
+        playNextInSequence();
+    }
+
+    function rewatchSequence() {
+        initAudio(); 
+        document.getElementById('btn-rewatch').classList.add('hidden');
+        document.getElementById('btn-retry').classList.add('hidden');
+        document.getElementById('math-area').classList.add('hidden');
+        document.getElementById('recall-dots').classList.add('hidden');
+        currentIndex=0; highestIndexSeen=0; gameState='watching'; clearGrid();
+        globalZIndex = 100;
+        
+        memorizeStartTime = Date.now(); memorizeTimerActive = true;
+        document.getElementById('mem-box').classList.add('active');
+
+        document.getElementById('game-area').classList.remove('hidden');
+
+        document.getElementById('status-text').textContent='Memutar ulang urutan. Perhatikan baik-baik!';
+        document.getElementById('status-text').style.color='var(--text)';
+        document.getElementById('btn-recall').classList.remove('hidden');
+        playNextInSequence();
+    }
+
+    function retrySubmit() {
+        initAudio(); 
+        document.getElementById('btn-rewatch').classList.add('hidden');
+        document.getElementById('btn-retry').classList.add('hidden');
+        document.getElementById('math-area').classList.add('hidden');
+        gameState='recalling_pos'; currentRecallStep=0; clearGrid();
+        
+        document.getElementById('game-area').classList.remove('hidden');
+        
+        const visualMode = document.getElementById('visual-mode').value;
+        let modeText = 'urutan posisi kotak';
+        if (visualMode === 'piano' || visualMode === 'piano-flow') modeText = 'urutan lajur/kolom';
+        if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            modeText = visualMode.startsWith('outward') ? 'arah perginya (Tepi/Sudut)' : 'arah datangnya';
+            document.getElementById('game-container').classList.add('recall-active');
+        }
+        
+        document.getElementById('status-text').textContent=`Ayo coba lagi! Klik ${modeText}nya.`;
+        document.getElementById('status-text').style.color='var(--text)';
+        renderRecallDots(); 
+        recallStartTime = Date.now(); recallTimerActive = true;
+        document.getElementById('rec-box').classList.add('active');
+    }
+
+    function clearGrid() {
+        const visualMode = document.getElementById('visual-mode').value;
+        if (visualMode === 'grid') {
+            for (let i=0;i<currentGridSize*currentGridSize;i++) {
+                const c=document.getElementById('cell-'+i); if(!c) continue;
+                c.className='cell';
+                const inner=c.querySelector('.cell-inner'); if(inner) inner.innerHTML='';
+            }
+        } else if (visualMode.startsWith('crossroad') || visualMode.startsWith('outward')) {
+            const tiles = document.querySelectorAll('.cross-tile');
+            tiles.forEach(t => t.remove());
+            for (let i=0; i<8; i++) {
+                const z = document.getElementById('cross-'+i);
+                if(z) { z.classList.remove('correct'); z.classList.remove('wrong'); }
+            }
+        } else {
+            for (let i=0;i<currentGridSize;i++) {
+                const lane=document.getElementById('lane-'+i); if(!lane) continue;
+                lane.className='piano-lane';
+                const tiles = lane.querySelectorAll('.piano-tile');
+                tiles.forEach(t => t.remove());
+            }
+        }
+    }
+
+    function resetUI() {
+        clearGrid();
+        ['level-selection-area','math-area','recall-dots','timer-display', 'game-area'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+        ['btn-recall','btn-rewatch','btn-retry','btn-restart','btn-continue'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+        document.getElementById('btn-start').classList.remove('hidden');
+        document.getElementById('lives-display').classList.add('hidden');
+        document.getElementById('status-text').textContent='Siap menguji memori dan berhitung?';
+        document.getElementById('status-text').style.color='var(--text)';
+        
+        if(document.getElementById('game-container')) {
+            document.getElementById('game-container').classList.remove('recall-active');
+        }
+        
+        stopDisplayTimer();
+        totalMemorizeTime = 0; totalRecallTime = 0;
+        memorizeTimerActive = false; recallTimerActive = false;
+        document.getElementById('mem-box').classList.remove('active');
+        document.getElementById('rec-box').classList.remove('active');
+
+        currentIndex=0; highestIndexSeen=0; highestScore=0; updateProgress();
+    }
+
+    function resetAndShowIntro() {
+        resetUI();
+        document.getElementById('game-container').innerHTML='';
+        document.getElementById('intro').style.display='block';
+    }
+
+    function handleEnter(e) { if(e.key==='Enter') checkMath(); }
+</script>
+</body>
+</html>
