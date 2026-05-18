@@ -19,7 +19,6 @@
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
-
     <div class="max-w-4xl w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
         
         <!-- PANEL KIRI: SETUP PERMAINAN -->
@@ -44,7 +43,7 @@
                 <div class="flex gap-2">
                     <button class="round-btn flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors" data-round="1">R1</button>
                     <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="2">R2</button>
-                    <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="3">R3</button>
+                    <!-- Tombol R3 dihapus sesuai permintaan -->
                 </div>
             </div>
 
@@ -99,7 +98,6 @@
                     SUBMIT
                 </button>
             </div>
-
         </div>
     </div>
 
@@ -146,11 +144,8 @@
             2: {
                 0: [11, 26, 8, 41, 22, 17, 34, 19, 45, 25, 14, 33, 7, 48, 5, 29, 4, 38, 31, 21],
                 1: [15, 30, 10, 31, 37, 41, 19, 28, 3, 50, 23, 6, 42, 12, 25, 13, 26, 38, 16, 47]
-            },
-            3: {
-                0: Array(20).fill(0),
-                1: Array(20).fill(0)
             }
+            // Data array R3 dihapus sesuai permintaan
         };
 
         // Peta kedekatan Icosahedron (Topological Map).
