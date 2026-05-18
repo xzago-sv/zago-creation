@@ -300,7 +300,7 @@
         // Variabel Global Three.js
         let scene, camera, renderer, controls;
         let icosahedrons = []; 
-        let labelSprites = []; // Tambihan variabel pikeun nyimpen labél téks (Sundanese)
+        let labelSprites = []; // Tambihan variabel pikeun nyimpen labél téks
         let manualRotations = new Map(); // Untuk interaksi sentuh mandiri
         
         let allMaterials = [[], []];
@@ -532,18 +532,20 @@
             CANVAS_CONTAINER.addEventListener('pointercancel', endPointer);
         }
 
-        // Fungsi pikeun nyieun sprite téks labél di rohangan 3D (Sundanese)
+        // Fungsi pikeun nyieun sprite téks labél di rohangan 3D
         function createTextSprite(message) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = 512;
-            canvas.height = 128; 
+            // Kanvas persegi proporsional pikeun hiji karakter
+            canvas.width = 256;
+            canvas.height = 256; 
 
-            context.font = "Bold 44px Arial, sans-serif";
+            // Samakan persis dengan font "120px Arial bold" di dalam canvas wajah Ico
+            context.font = "bold 120px Arial, sans-serif";
             context.textAlign = "center";
             context.textBaseline = "middle";
             
-            // Bayangan pikeun mastikeun téks bodas katingali jelas (Sundanese)
+            // Bayangan pikeun mastikeun téks bodas katingali jelas
             context.shadowColor = "rgba(0, 0, 0, 0.8)";
             context.shadowBlur = 6;
             context.shadowOffsetX = 2;
@@ -556,14 +558,14 @@
             const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
             const sprite = new THREE.Sprite(spriteMaterial);
             
-            // Skala proporsional pikeun rohangan 3D (Sundanese)
-            sprite.scale.set(12, 3, 1); 
+            // Skala disaluyukeun kana ukuran anyar kanvas
+            sprite.scale.set(5, 5, 1); 
             return sprite;
         }
 
         function updateDiceDisplay() {
             icosahedrons.forEach(die => scene.remove(die));
-            labelSprites.forEach(sprite => scene.remove(sprite)); // Pupus labél lami (Sundanese)
+            labelSprites.forEach(sprite => scene.remove(sprite)); // Pupus labél lami 
             
             icosahedrons = [];
             labelSprites = [];
@@ -587,12 +589,14 @@
                 scene.add(mesh);
                 icosahedrons.push(mesh);
 
-                // Nambihan labél Icosahedron di luhurna (Sundanese)
-                const labelName = `Icosahedron ${index + 1}`;
-                const labelSprite = createTextSprite(labelName);
-                labelSprite.position.set(pos.x, pos.y + 6.5, pos.z); // Posisikeun 6.5 unit di luhur puseur dadu
-                scene.add(labelSprite);
-                labelSprites.push(labelSprite);
+                // Nambihan labél ukur keur Ronde 2 (diceCount > 1)
+                if (diceCount > 1) {
+                    const labelName = `${index + 1}`; // Hanya angka 1 dan 2
+                    const labelSprite = createTextSprite(labelName);
+                    labelSprite.position.set(pos.x, pos.y + 7.0, pos.z); // Posisikeun 7.0 unit di luhur puseur dadu
+                    scene.add(labelSprite);
+                    labelSprites.push(labelSprite);
+                }
             });
             camera.updateProjectionMatrix();
         }
@@ -657,7 +661,7 @@
                     ctx.restore();
                 }
 
-                // 3. Gambar Nilai/Matematika di bagian tengah bawah
+                // Gambar Nilai/Matematika di bagian tengah bawah
                 if (showValue && text && text.trim() !== "") {
                     const mathY = size * 0.65; 
                     const textTrimmed = text.trim();
