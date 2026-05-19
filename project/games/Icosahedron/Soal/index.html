@@ -680,7 +680,7 @@
 
                 // Tambahkan aksen garis putih di pinggiran segitiga tanpa gap (bleeding edge)
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 12; // Lebar garis dibesarkan agar separuhnya melebar menutupi UV seam
+                ctx.lineWidth = 8; // Ketebalan diturunkan dari 12 ke 8 agar aksen putih tidak terlalu mendominasi
                 ctx.lineJoin = 'round'; // Sudut bulat untuk mencegah tepian terpotong tajam
                 ctx.beginPath();
                 // Kordinat menempel persis di titik terluar UV
