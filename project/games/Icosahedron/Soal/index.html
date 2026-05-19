@@ -437,7 +437,8 @@
             const baseGeometry = new THREE.IcosahedronGeometry(radius, 0);
             
             sharedEdgesGeometry = new THREE.EdgesGeometry(baseGeometry);
-            sharedEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 });
+            // Opacity dinaikkan ke 1.0 agar solid
+            sharedEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
 
             sharedGeometry = baseGeometry.clone().toNonIndexed();
             
@@ -677,13 +678,15 @@
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
                 ctx.fillRect(0, 0, size, size);
 
-                // Tambahkan aksen garis putih di pinggiran segitiga (Opacity ditingkatkan)
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-                ctx.lineWidth = 4;
+                // Tambahkan aksen garis putih di pinggiran segitiga tanpa gap (bleeding edge)
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 12; // Lebar garis dibesarkan agar separuhnya melebar menutupi UV seam
+                ctx.lineJoin = 'round'; // Sudut bulat untuk mencegah tepian terpotong tajam
                 ctx.beginPath();
-                ctx.moveTo(3, size - 3); 
-                ctx.lineTo(size - 3, size - 3);
-                ctx.lineTo(size / 2, 3);
+                // Kordinat menempel persis di titik terluar UV
+                ctx.moveTo(0, size); 
+                ctx.lineTo(size, size);
+                ctx.lineTo(size / 2, 0);
                 ctx.closePath();
                 ctx.stroke();
 
