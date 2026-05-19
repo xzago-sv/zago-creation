@@ -68,8 +68,6 @@
                 <span id="speed-display" class="text-indigo-400">0.5x</span>
             </label>
             <input type="range" id="speed-slider" min="0" max="5" step="0.1" value="0.5" class="w-full accent-indigo-500 cursor-pointer">
-            
-            <!-- Tombol Ronde Icosahedron Dihapus dari sini (sudah dipindah ke Panel Kanan) -->
         </div>
 
         <!-- Input 20 Wajah -->
@@ -91,9 +89,7 @@
                     </p>
                 </div>
                 <div class="flex flex-col items-end gap-2">
-                    <!-- Toggle Switch Angka & Huruf Dihapus dari sini (sudah dipindah ke Panel Kanan) -->
-
-                    <!-- Pemilih Warna Indeks (Tetap di sini) -->
+                    <!-- Pemilih Warna Indeks -->
                     <div class="flex items-center gap-2">
                         <label class="text-[10px] text-slate-400">Warna Indeks</label>
                         <input type="color" id="global-index-color" value="#000000" class="w-5 h-5 shrink-0 cursor-pointer bg-slate-900 border border-slate-600 rounded p-0" title="Ubah warna semua teks indeks">
@@ -201,7 +197,8 @@
                 </button>
             </div>
             
-            <div id="right-panel" class="pointer-events-auto bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg shadow-2xl p-4 w-56 transition-all duration-300 origin-top-right transform">
+            <!-- Default scale-0 opacity-0 agar panel ini tersembunyi (minimized) saat pertama kali buka -->
+            <div id="right-panel" class="pointer-events-auto bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg shadow-2xl p-4 w-56 transition-all duration-300 origin-top-right transform scale-0 opacity-0">
                 <!-- Ronde Icosahedron -->
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-300 mb-2 text-center">Ronde Icosahedron</label>
@@ -212,6 +209,15 @@
                 </div>
                 
                 <hr class="border-slate-700 mb-4">
+
+                <!-- Toggle Switch Seluruh Mesh Icosahedron -->
+                <div class="flex justify-between items-center mb-3">
+                    <label class="text-xs font-semibold text-indigo-300 cursor-pointer" for="toggle-mesh">Tampilkan Icosahedron</label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-mesh" class="sr-only peer" checked>
+                        <div class="w-7 h-4 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
+                    </label>
+                </div>
                 
                 <!-- Toggle Switch Angka (Default Unchecked) -->
                 <div class="flex justify-between items-center mb-3">
@@ -222,11 +228,11 @@
                     </label>
                 </div>
                 
-                <!-- Toggle Switch Huruf (Default Unchecked) -->
+                <!-- Toggle Switch Huruf (DIUBAH KE DEFAULT CHECKED) -->
                 <div class="flex justify-between items-center">
                     <label class="text-xs font-semibold text-slate-300 cursor-pointer" for="toggle-index">Tampilkan Huruf</label>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle-index" class="sr-only peer">
+                        <input type="checkbox" id="toggle-index" class="sr-only peer" checked>
                         <div class="w-7 h-4 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
                 </div>
@@ -302,14 +308,15 @@
         let memoryCorePalette = [...THEMES[currentTheme]];
 
         let globalIndexColor = '#000000'; // Warna indeks dikunci hitam
-        let showIndex = false; // Status default huruf: TERSEMBUNYI
+        let showIndex = true; // Status default huruf: MUNCUL
         let showValue = false; // Status default angka: TERSEMBUNYI
+        let showMesh = true; // Status default dadu keseluruhan: MUNCUL
 
         // Variabel Global Three.js
         let scene, camera, renderer, controls;
         let icosahedrons = []; 
-        let labelSprites = []; // Tambihan variabel pikeun nyimpen labél téks
-        let manualRotations = new Map(); // Untuk interaksi sentuh mandiri
+        let labelSprites = []; 
+        let manualRotations = new Map(); 
         
         let allMaterials = [[], []];
         let allTextures = [[], []];
@@ -338,18 +345,20 @@
             2: [R2_I1, R2_I2]
         };
 
-        // Permutasi Warna Tetap (Fixed Shuffle) agar susunan warna 100% permanen saat direfresh
-        const FIXED_SHUFFLES = [
-            [0, 11, 5, 16, 2, 13, 8, 19, 1, 12, 6, 17, 3, 14, 9, 18, 4, 15, 10, 7], // Ico 1
-            [7, 18, 12, 3, 9, 0, 15, 6, 17, 8, 19, 10, 1, 14, 5, 16, 2, 11, 4, 13]  // Ico 2
-        ];
+        // Fungsi LCG (Linear Congruential Generator) untuk Seed Random yang Konsisten
+        function LCG(seed) {
+            return function() {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            }
+        }
 
-        // Inisialisasi awal menggunakan data Ronde 1 dan warna permanen
+        // Inisialisasi awal 
         let allFaceData = Array.from({length: 2}, (_, d) => 
             Array.from({length: 20}, (_, i) => ({ 
                 label: String.fromCharCode(65 + i),
-                value: roundPresets[1][d][i], // Load angka utama sesuai ronde
-                color: memoryCorePalette[FIXED_SHUFFLES[d][i]].bg, // Menggunakan urutan warna permanen
+                value: roundPresets[1][d][i], 
+                color: memoryCorePalette[i].bg, // Sementara
                 textColor: '#ffffff' 
             }))
         );
@@ -371,13 +380,13 @@
             return Math.sqrt( (2 + rmean/256) * (r*r) + 4*(g*g) + (2 + (255-rmean)/256) * (b*b) );
         }
 
-        function generateSmartPalette() {
+        function generateSmartPalette(rng) {
             let bestPalette = [];
             let maxMinDistance = 0; 
-            for (let attempt = 0; attempt < 3000; attempt++) {
+            for (let attempt = 0; attempt < 5000; attempt++) {
                 let shuffled = [...memoryCorePalette];
                 for (let i = shuffled.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
+                    const j = Math.floor(rng() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
                 }
                 
@@ -396,7 +405,6 @@
                     maxMinDistance = localMinDistance;
                     bestPalette = [...shuffled];
                 }
-                if (maxMinDistance > 120) break;
             }
             return bestPalette;
         }
@@ -408,9 +416,6 @@
             
             const aspect = CANVAS_CONTAINER.clientWidth / CANVAS_CONTAINER.clientHeight;
             camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-            
-            // Kamera awal di-set sementara, nanti ditimpa oleh updateDiceDisplay
-            camera.position.set(0, 0, 15);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(CANVAS_CONTAINER.clientWidth, CANVAS_CONTAINER.clientHeight);
@@ -466,6 +471,17 @@
                 }
             }
 
+            // Determinisitc Smart Shuffle
+            const rng1 = LCG(1024);
+            const rng2 = LCG(2048);
+            const palette1 = generateSmartPalette(rng1);
+            const palette2 = generateSmartPalette(rng2);
+
+            for (let i = 0; i < 20; i++) {
+                allFaceData[0][i].color = palette1[i].bg;
+                allFaceData[1][i].color = palette2[i].bg;
+            }
+
             for (let d = 0; d < 2; d++) {
                 for (let i = 0; i < 20; i++) {
                     const matData = createBlankMaterial();
@@ -480,10 +496,9 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             
-            // KUNCI KAMERA TOTAL: Mencegah user merusak posisi icosahedron
-            controls.enableZoom = false;   // Tidak bisa di-zoom in/out
-            controls.enableRotate = false; // Tidak bisa memutar sudut pandang ruang
-            controls.enablePan = false;    // Tidak bisa menggeser letak ruang
+            controls.enableZoom = false;   
+            controls.enableRotate = false; 
+            controls.enablePan = false;    
             controls.autoRotate = false;
 
             setupRaycaster();
@@ -516,7 +531,6 @@
                         lastY: e.clientY
                     });
                 }
-                // Karena kamera dikunci, kita tidak perlu memulihkan OrbitControls saat user tap area kosong
             });
 
             CANVAS_CONTAINER.addEventListener('pointermove', (e) => {
@@ -540,20 +554,16 @@
             CANVAS_CONTAINER.addEventListener('pointercancel', endPointer);
         }
 
-        // Fungsi pikeun nyieun sprite téks labél di rohangan 3D
         function createTextSprite(message) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            // Kanvas persegi proporsional pikeun hiji karakter
             canvas.width = 256;
             canvas.height = 256; 
 
-            // Samakan persis dengan font "120px Arial bold" di dalam canvas wajah Ico
             context.font = "bold 120px Arial, sans-serif";
             context.textAlign = "center";
             context.textBaseline = "middle";
             
-            // Bayangan pikeun mastikeun téks bodas katingali jelas
             context.shadowColor = "rgba(0, 0, 0, 0.8)";
             context.shadowBlur = 6;
             context.shadowOffsetX = 2;
@@ -566,51 +576,67 @@
             const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
             const sprite = new THREE.Sprite(spriteMaterial);
             
-            // Skala disaluyukeun kana ukuran anyar kanvas
             sprite.scale.set(5, 5, 1); 
             return sprite;
         }
 
+        // FUNGSI KAMERA RESPONSIF: Mencegah Icosahedron kepotong di layar sempit/tablet
+        function updateCameraZ() {
+            const aspect = CANVAS_CONTAINER.clientWidth / CANVAS_CONTAINER.clientHeight;
+            let responsiveScale = 1.0;
+            
+            // Jika layar cenderung tegak (potrait) atau tablet, kita mundur (zoom out) kameranya
+            if (aspect < 1.5) {
+                responsiveScale = 1.5 / aspect; 
+                // Pembatasan agar tidak terlalu kecil di layar HP yang sangat panjang
+                if (responsiveScale > 2.5) responsiveScale = 2.5; 
+            }
+
+            if (diceCount === 1) {
+                camera.position.set(0, 0, 13.0 * responsiveScale);
+            } else if (diceCount === 2) {
+                camera.position.set(0, 0, 17.5 * responsiveScale);
+            }
+        }
+
         function updateDiceDisplay() {
             icosahedrons.forEach(die => scene.remove(die));
-            labelSprites.forEach(sprite => scene.remove(sprite)); // Pupus labél lami 
+            labelSprites.forEach(sprite => scene.remove(sprite)); 
             
             icosahedrons = [];
             labelSprites = [];
             const positions = [];
             
+            updateCameraZ(); // Panggil fungsi adaptasi skala kamera
+
             if (diceCount === 1) {
-                // Posisi Y tetap 0 karena tidak ada label, sudah center natural
                 positions.push({ x: 0, y: 0, z: 0 });
-                camera.position.set(0, 0, 13.0); // Diperbesar dari 15 ke 13 (makin dekat makin besar)
             } else if (diceCount === 2) {
-                // Offset posisi Y ke bawah agar gabungan (Label Atas + Dadu) berada seimbang di tengah layar
                 positions.push({ x: -6.2, y: -1.8, z: 0 });
                 positions.push({ x: 6.2, y: -1.8, z: 0 });
-                camera.position.set(0, 0, 17.5); // Diperbesar dari 20 ke 17.5
             }
 
-            positions.forEach((pos, index) => {
-                const mesh = new THREE.Mesh(sharedGeometry, allMaterials[index]);
-                const edges = new THREE.LineSegments(sharedEdgesGeometry, sharedEdgesMaterial);
-                mesh.add(edges);
-                mesh.position.set(pos.x, pos.y, pos.z);
-                mesh.rotation.set(Math.random() * Math.PI*2, Math.random() * Math.PI*2, Math.random() * Math.PI*2);
-                scene.add(mesh);
-                icosahedrons.push(mesh);
+            // Hanya bangun mesh 3D jika toggle "Tampilkan Icosahedron" sedang ON
+            if (showMesh) {
+                positions.forEach((pos, index) => {
+                    const mesh = new THREE.Mesh(sharedGeometry, allMaterials[index]);
+                    const edges = new THREE.LineSegments(sharedEdgesGeometry, sharedEdgesMaterial);
+                    mesh.add(edges);
+                    mesh.position.set(pos.x, pos.y, pos.z);
+                    mesh.rotation.set(Math.random() * Math.PI*2, Math.random() * Math.PI*2, Math.random() * Math.PI*2);
+                    scene.add(mesh);
+                    icosahedrons.push(mesh);
 
-                // Nambihan labél ukur keur Ronde 2 (diceCount > 1)
-                if (diceCount > 1) {
-                    const labelName = `${index + 1}`; // Hanya angka 1 dan 2
-                    const labelSprite = createTextSprite(labelName);
-                    // Posisikan label relatif terhadap mesh yang sudah diturunkan (gap 2.5 unit di atas vertex teratas)
-                    labelSprite.position.set(pos.x, pos.y + 7.5, pos.z); 
-                    scene.add(labelSprite);
-                    labelSprites.push(labelSprite);
-                }
-            });
+                    if (diceCount > 1) {
+                        const labelName = `${index + 1}`; 
+                        const labelSprite = createTextSprite(labelName);
+                        labelSprite.position.set(pos.x, pos.y + 7.5, pos.z); 
+                        scene.add(labelSprite);
+                        labelSprites.push(labelSprite);
+                    }
+                });
+            }
             
-            // Mengarahkan titik tumpu kamera tetap ke titik tengah layar absolut
             if (controls) controls.target.set(0, 0, 0); 
             camera.updateProjectionMatrix();
         }
@@ -675,7 +701,6 @@
                     ctx.restore();
                 }
 
-                // Gambar Nilai/Matematika di bagian tengah bawah
                 if (showValue && text && text.trim() !== "") {
                     const mathY = size * 0.65; 
                     const textTrimmed = text.trim();
@@ -774,7 +799,6 @@
                 setTimeout(onWindowResize, 10);
             });
 
-            // Logika untuk Minimize/Maximize Floating Panel Kanan
             const btnToggleRight = document.getElementById('btn-toggle-right');
             const rightPanel = document.getElementById('right-panel');
             btnToggleRight.addEventListener('click', () => {
@@ -782,18 +806,15 @@
                 rightPanel.classList.toggle('opacity-0');
             });
 
-            // Logika Fullscreen Hibrida (Mendukung semua browser + Fallback Iframe)
             let isFauxFullscreen = false;
             document.getElementById('btn-fullscreen').addEventListener('click', () => {
                 const elem = document.documentElement;
                 const isNativeFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
 
                 if (!isNativeFS && !isFauxFullscreen) {
-                    // Coba masuk ke Native Fullscreen (Berfungsi saat file dijalankan offline/lokal)
                     const requestFS = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.mozRequestFullScreen || elem.msRequestFullscreen;
                     if (requestFS) {
                         Promise.resolve(requestFS.call(elem)).catch(err => {
-                            // Jika diblokir oleh Iframe Web, gunakan Faux Fullscreen (Maximize Container)
                             console.warn("Fullscreen diblokir oleh Iframe. Menggunakan Faux Fullscreen.");
                             isFauxFullscreen = true;
                             document.body.classList.add('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen');
@@ -801,7 +822,6 @@
                         });
                     }
                 } else {
-                    // Keluar dari Fullscreen
                     if (isNativeFS) {
                         const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
                         if (exitFS) exitFS.call(document);
@@ -822,24 +842,20 @@
                     else btn.className = "flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm font-bold shadow transition-colors";
                 });
 
-                // Load angka spesifik dari preset jika User berpindah Ronde (bukan saat load file save)
                 if (loadPreset) {
                     for (let d = 0; d < 2; d++) {
                         for (let i = 0; i < 20; i++) {
                             allFaceData[d][i].value = roundPresets[count][d][i];
                         }
                     }
-                    // Update UI input di panel kiri untuk Ico yang sedang diedit
                     for (let i = 0; i < 20; i++) {
                         const inputElem = document.getElementById(`input-face-${i}`);
                         if (inputElem) inputElem.value = allFaceData[activeEditDie][i].value;
                     }
-                    // Render ulang tekstur seluruh canvas
                     for (let d = 0; d < 2; d++) {
                         for (let i = 0; i < 20; i++) updateFace(d, i);
                     }
                 }
-
                 updateDiceDisplay();
             };
             document.getElementById('btn-dice-1').addEventListener('click', () => setDiceCount(1));
@@ -860,6 +876,12 @@
             };
             document.getElementById('btn-edit-die-0').addEventListener('click', () => setActiveEditDie(0));
             document.getElementById('btn-edit-die-1').addEventListener('click', () => setActiveEditDie(1));
+
+            // Event listener toggle mesh 3D
+            document.getElementById('toggle-mesh').addEventListener('change', (e) => {
+                showMesh = e.target.checked;
+                updateDiceDisplay();
+            });
 
             document.getElementById('toggle-index').addEventListener('change', (e) => {
                 showIndex = e.target.checked;
@@ -941,14 +963,18 @@
                 globalIndexColor = '#000000';
                 document.getElementById('global-index-color').value = globalIndexColor;
 
+                const rng1 = LCG(1024);
+                const rng2 = LCG(2048);
+                const palette1 = generateSmartPalette(rng1);
+                const palette2 = generateSmartPalette(rng2);
+
                 for (let d = 0; d < 2; d++) {
+                    const activePalette = d === 0 ? palette1 : palette2;
                     for (let i = 0; i < 20; i++) {
-                        // Memuat kembali urutan warna permanen jika pengguna mengganti opsi tema warna
-                        const colorIdx = FIXED_SHUFFLES[d][i];
-                        allFaceData[d][i].color = memoryCorePalette[colorIdx].bg;
+                        allFaceData[d][i].color = activePalette[i].bg;
                         allFaceData[d][i].textColor = '#ffffff'; 
                         if (d === activeEditDie) {
-                            document.getElementById(`input-color-${i}`).value = memoryCorePalette[colorIdx].bg;
+                            document.getElementById(`input-color-${i}`).value = activePalette[i].bg;
                         }
                         updateFace(d, i);
                     }
@@ -956,7 +982,7 @@
             });
 
             document.getElementById('btn-random-color').addEventListener('click', () => {
-                let smartPalette = generateSmartPalette();
+                let smartPalette = generateSmartPalette(Math.random);
                 for (let i = 0; i < 20; i++) {
                     allFaceData[activeEditDie][i].color = smartPalette[i].bg;
                     allFaceData[activeEditDie][i].textColor = '#ffffff';
@@ -1018,7 +1044,7 @@
                 const name = inputSaveName.value.trim();
                 if (!name) return showStatus("⚠️ Masukkan nama!", "text-amber-400");
                 const saves = getSaves();
-                saves[name] = { allFaces: allFaceData, indexColor: globalIndexColor, showIndex, showValue, diceCount };
+                saves[name] = { allFaces: allFaceData, indexColor: globalIndexColor, showIndex, showValue, showMesh, diceCount };
                 localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
                 inputSaveName.value = ''; renderSaveList();
                 showStatus(`✅ "${name}" disimpan!`, "text-emerald-400");
@@ -1034,15 +1060,18 @@
                     showIndex = sd.showIndex !== false; 
                     document.getElementById('toggle-index').checked = showIndex;
                     
-                    showValue = sd.showValue !== false; 
+                    showValue = sd.showValue === true; 
                     document.getElementById('toggle-value').checked = showValue;
+                    
+                    showMesh = sd.showMesh !== false; 
+                    document.getElementById('toggle-mesh').checked = showMesh;
 
-                    // Load jumlah Ico (false = jangan timpa nilai save ini dengan array preset ronde bawaan)
                     if (sd.diceCount) setDiceCount(sd.diceCount, false); 
                     
                     if (sd.allFaces) allFaceData = JSON.parse(JSON.stringify(sd.allFaces));
                     setActiveEditDie(0);
                     for (let d = 0; d < 2; d++) for (let i = 0; i < 20; i++) updateFace(d, i);
+                    updateDiceDisplay();
                     showStatus(`📂 "${name}" dimuat.`, "text-indigo-400");
                 }
             }
@@ -1075,7 +1104,6 @@
                 e.target.value = '';
             });
 
-            // TOMBOL SALIN DATA TOPOLOGI UNTUK AI
             document.getElementById('btn-copy-topo').addEventListener('click', () => {
                 let text = "=== DATA TOPOLOGI & GEOMETRI ICOSAHEDRON ===\n\n";
                 text += "1. STRUKTUR FISIK\n";
@@ -1112,12 +1140,11 @@
                             text += pairs.join(" | ") + "\n\n";
                         } else if (d===0 && isEmpty) {
                             text += ">> KOSONG (Belum ada angka yang diset)\n\n";
-                            break; // Skip dadu 2 jika dadu 1 saja kosong
+                            break; 
                         }
                     }
                 }
 
-                // Menyalin menggunakan fallback execCommand untuk kompatibilitas iframe
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 textarea.style.position = 'fixed'; 
@@ -1133,14 +1160,12 @@
                 document.body.removeChild(textarea);
             });
 
-            // TOMBOL EXPORT JSON KHUSUS UNTUK AI
             document.getElementById('btn-export-topo').addEventListener('click', () => {
                 if(faceAdjacency.length === 0) {
                     showStatus("⏳ Tunggu loading selesai", "text-amber-400");
                     return;
                 }
 
-                // Bangun struktur JSON yang ramah Machine-Learning (AI)
                 const topoJSON = {
                     metadata: {
                         deskripsi: "Topologi Geometri Memory Game (Math Icosahedron)",
@@ -1152,7 +1177,6 @@
                     data_ronde: []
                 };
 
-                // Petakan Adjacency
                 for(let i = 0; i < 20; i++) {
                     let letter = String.fromCharCode(65 + i);
                     let neighbors = faceAdjacency[i].map(n => String.fromCharCode(65 + n));
@@ -1162,7 +1186,6 @@
                     });
                 }
 
-                // Petakan Isi per Ronde
                 for(let r = 1; r <= 2; r++) {
                     let roundObj = { nomor_ronde: r, icosahedrons: [] };
                     for(let d = 0; d < 2; d++) {
@@ -1180,7 +1203,7 @@
                             }
                             roundObj.icosahedrons.push(icoObj);
                         } else if (d === 0 && isEmpty) {
-                            break; // Skip pengecekan Ico 2 jika Ico 1 di ronde ini masih kosong
+                            break; 
                         }
                     }
                     if (roundObj.icosahedrons.length > 0) {
@@ -1188,7 +1211,6 @@
                     }
                 }
 
-                // Export Logic
                 const blob = new Blob([JSON.stringify(topoJSON, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1208,12 +1230,12 @@
             camera.aspect = CANVAS_CONTAINER.clientWidth / CANVAS_CONTAINER.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(CANVAS_CONTAINER.clientWidth, CANVAS_CONTAINER.clientHeight);
+            updateCameraZ(); // Adaptasikan skala saat layar diubah tanpa me-reset rotasi dadu
         }
 
         function animate() {
             requestAnimationFrame(animate);
             icosahedrons.forEach((die, idx) => {
-                // Jangan mutar otomatis jika sedang disentuh
                 let isBeingDragged = false;
                 manualRotations.forEach((data) => { if (data.mesh === die) isBeingDragged = true; });
                 if (!isBeingDragged) {
