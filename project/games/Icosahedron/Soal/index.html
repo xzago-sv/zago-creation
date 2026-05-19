@@ -38,7 +38,7 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; }
+        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; overscroll-behavior: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
@@ -56,7 +56,7 @@
         <!-- Header -->
         <div class="p-5 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold text-indigo-400">Math Icosahedron</h1>
+                <h1 class="text-xl font-bold text-indigo-400">Icosahedron</h1>
                 <p class="text-xs text-slate-400 mt-1">Dadu 20-Sisi dengan Indeks & LaTeX</p>
             </div>
         </div>
@@ -437,7 +437,7 @@
             const baseGeometry = new THREE.IcosahedronGeometry(radius, 0);
             
             sharedEdgesGeometry = new THREE.EdgesGeometry(baseGeometry);
-            sharedEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
+            sharedEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 });
 
             sharedGeometry = baseGeometry.clone().toNonIndexed();
             
@@ -592,10 +592,12 @@
                 if (responsiveScale > 2.5) responsiveScale = 2.5; 
             }
 
+            // Memundurkan jarak kamera sebesar 5% (mengurangi ukuran visual objek)
+            const zoomOutFactor = 1.05; 
             if (diceCount === 1) {
-                camera.position.set(0, 0, 13.0 * responsiveScale);
+                camera.position.set(0, 0, 13.0 * responsiveScale * zoomOutFactor);
             } else if (diceCount === 2) {
-                camera.position.set(0, 0, 17.5 * responsiveScale);
+                camera.position.set(0, 0, 17.5 * responsiveScale * zoomOutFactor);
             }
         }
 
@@ -670,6 +672,20 @@
             const renderFinal = (imgElement, isFallback) => {
                 ctx.fillStyle = bgColor;
                 ctx.fillRect(0, 0, size, size);
+
+                // Mencerahkan warna dasar sedikit secara dinamis (12% putih)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.fillRect(0, 0, size, size);
+
+                // Tambahkan aksen garis putih di pinggiran segitiga (Opacity ditingkatkan)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(3, size - 3); 
+                ctx.lineTo(size - 3, size - 3);
+                ctx.lineTo(size / 2, 3);
+                ctx.closePath();
+                ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
@@ -807,6 +823,9 @@
             });
 
             let isFauxFullscreen = false;
+            // Pencegat scroll paksa untuk iPad/iOS
+            const preventDefaultTouch = (e) => { e.preventDefault(); };
+
             document.getElementById('btn-fullscreen').addEventListener('click', () => {
                 const elem = document.documentElement;
                 const isNativeFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
@@ -818,6 +837,8 @@
                             console.warn("Fullscreen diblokir oleh Iframe. Menggunakan Faux Fullscreen.");
                             isFauxFullscreen = true;
                             document.body.classList.add('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen');
+                            document.body.style.touchAction = 'none'; // Kunci interaksi scroll
+                            document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
                             setTimeout(onWindowResize, 100);
                         });
                     }
@@ -829,6 +850,8 @@
                     if (isFauxFullscreen) {
                         isFauxFullscreen = false;
                         document.body.classList.remove('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen');
+                        document.body.style.touchAction = '';
+                        document.body.removeEventListener('touchmove', preventDefaultTouch);
                         setTimeout(onWindowResize, 100);
                     }
                 }
