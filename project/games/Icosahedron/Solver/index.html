@@ -18,7 +18,12 @@
         .letter-btn:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
+        <!-- Toast akan muncul di sini via JS -->
+    </div>
+
     <div class="max-w-4xl w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
         
         <!-- PANEL KIRI: SETUP PERMAINAN -->
@@ -43,7 +48,8 @@
                 <div class="flex gap-2">
                     <button class="round-btn flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors" data-round="1">R1</button>
                     <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="2">R2</button>
-                    <!-- Tombol R3 dihapus sesuai permintaan -->
+                    <!-- Tambahan Ronde 2A -->
+                    <button class="round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors" data-round="2A">R2A</button>
                 </div>
             </div>
 
@@ -88,7 +94,7 @@
             </div>
 
             <!-- Grid Huruf A-T -->
-            <div class="grid grid-cols-5 gap-2 mb-8" id="letter-grid">
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 mb-8" id="letter-grid">
                 <!-- Tombol Huruf akan di-generate via JS -->
             </div>
 
@@ -134,22 +140,49 @@
 
     <!-- SCRIPT LOGIKA -->
     <script>
+        // Fungsi untuk Custom Notifikasi (Toast) pengganti alert()
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-700 text-white border-slate-600';
+            if (type === 'error') bgClass = 'bg-red-900/90 text-red-100 border-red-700 backdrop-blur-sm';
+            if (type === 'success') bgClass = 'bg-emerald-900/90 text-emerald-100 border-emerald-700 backdrop-blur-sm';
+            
+            toast.className = `border px-4 py-3 rounded-lg shadow-xl text-sm font-semibold opacity-0 transition-opacity duration-300 text-center ${bgClass}`;
+            toast.innerText = message;
+            
+            container.appendChild(toast);
+            
+            // Trigger Animasi Masuk
+            setTimeout(() => toast.classList.remove('opacity-0'), 10);
+            
+            // Trigger Animasi Keluar dan Hapus Element
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
         // --- 1. DATA & STATE MEMORY ---
-        // Data angka diwarisi dari skrip sebelumnya
+        // Penyesuaian key data menggunakan String agar mendukung "2A"
         let PRESETS = {
-            1: {
+            "1": {
                 0: [13, 34, 7, 41, 26, 11, 39, 17, 46, 23, 19, 31, 14, 43, 6, 29, 3, 47, 37, 21],
                 1: Array(20).fill(0)
             },
-            2: {
+            "2": {
                 0: [11, 26, 8, 41, 22, 17, 34, 19, 45, 25, 14, 33, 7, 48, 5, 29, 4, 38, 31, 21],
                 1: [15, 30, 10, 31, 37, 41, 19, 28, 3, 50, 23, 6, 42, 12, 25, 13, 26, 38, 16, 47]
+            },
+            "2A": {
+                // Ico 1 mewarisi data R1, Ico 2 hasil kalkulasi matematis
+                0: [13, 34, 7, 41, 26, 11, 39, 17, 46, 23, 19, 31, 14, 43, 6, 29, 3, 47, 37, 21],
+                1: [15, 30, 10, 31, 37, 41, 19, 28, 3, 50, 23, 6, 42, 12, 25, 13, 26, 38, 16, 47]
             }
-            // Data array R3 dihapus sesuai permintaan
         };
 
         // Peta kedekatan Icosahedron (Topological Map).
-        // Sesuai dengan struktur fisik dadu yang diberikan (A-T).
         let ADJACENCY = [
             [1, 4, 6],    // 0 (A) menempel dengan B(1), E(4), G(6)
             [0, 2, 5],    // 1 (B) menempel dengan A(0), C(2), F(5)
@@ -178,9 +211,9 @@
                 { id: 1, name: "Player 1", active: true },
                 { id: 2, name: "Player 2", active: false }
             ],
-            round: 1,
+            round: "1", // Disimpan dalam bentuk string untuk mendukung "2A"
             ico: 0,
-            path: [] // Array of index huruf yang dipilih berurutan (0-19)
+            path: []
         };
 
         // --- 2. UI ELEMENTS ---
@@ -196,7 +229,6 @@
                 const div = document.createElement('div');
                 div.className = `flex items-center gap-2 p-1.5 rounded border ${p.active ? 'bg-slate-700 border-indigo-500' : 'bg-slate-900 border-slate-700'} transition-all`;
                 
-                // Radio button untuk pilih player yang aktif
                 const radio = document.createElement('input');
                 radio.type = 'radio';
                 radio.name = 'active_player';
@@ -208,7 +240,6 @@
                     renderPlayers();
                 };
 
-                // Input text untuk nama
                 const inputName = document.createElement('input');
                 inputName.type = 'text';
                 inputName.value = p.name;
@@ -218,7 +249,6 @@
                 div.appendChild(radio);
                 div.appendChild(inputName);
 
-                // Tombol hapus jika lebih dari 1 player
                 if(state.players.length > 1) {
                     const btnDel = document.createElement('button');
                     btnDel.innerHTML = '✕';
@@ -244,12 +274,10 @@
                 
                 let baseClass = "letter-btn h-12 rounded-lg font-bold text-lg shadow transition-all border-b-4 ";
                 if (isSelected) {
-                    // Huruf yang sudah dipilih
                     const orderIndex = state.path.indexOf(i) + 1;
                     baseClass += "bg-indigo-600 text-white border-indigo-800 ring-2 ring-indigo-400";
                     btn.innerHTML = `<span class="opacity-30 text-[10px] absolute top-1 left-1">${orderIndex}</span>${char}`;
                 } else {
-                    // Huruf yang belum dipilih
                     baseClass += "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600 hover:text-white";
                     btn.innerHTML = char;
                 }
@@ -258,11 +286,9 @@
                 
                 btn.onclick = () => {
                     if (isSelected) {
-                        // Jika di-klik lagi, hapus dari path (dan hapus semua setelahnya)
                         const idx = state.path.indexOf(i);
                         state.path = state.path.slice(0, idx);
                     } else {
-                        // Tambahkan ke path
                         state.path.push(i);
                     }
                     updatePathUI();
@@ -291,7 +317,6 @@
                 
                 pathDisplay.appendChild(badge);
 
-                // Tambahkan tanda plus jika bukan elemen terakhir
                 if (i < state.path.length - 1) {
                     const plus = document.createElement('span');
                     plus.className = 'text-slate-500 text-xs font-bold';
@@ -305,27 +330,33 @@
             const modal = document.getElementById('modal-result');
             const modalContent = document.getElementById('modal-content');
             
-            // Animasi menghilang
             modalContent.classList.remove('scale-100', 'opacity-100');
             modalContent.classList.add('scale-95', 'opacity-0');
             
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 200); // Tunggu durasi transisi selesai
+            }, 200);
         }
 
         // --- 4. LOGIKA EVALUASI (INTI APLIKASI) ---
         function evaluateAnswer() {
             if (state.path.length === 0) {
-                alert("Pilih minimal 1 huruf terlebih dahulu!");
+                showToast("Pilih minimal 1 huruf terlebih dahulu!", "error");
                 return;
             }
             if (!targetInput.value) {
-                alert("Masukkan Target Number terlebih dahulu!");
+                showToast("Masukkan Target Number terlebih dahulu!", "error");
                 return;
             }
 
             const target = parseInt(targetInput.value);
+            
+            // Jika data ronde tidak ada, fallback ke array 0
+            if (!PRESETS[state.round]) {
+                showToast(`Data untuk ronde ${state.round} belum tersedia!`, "error");
+                return;
+            }
+            
             const currentValues = PRESETS[state.round][state.ico];
             
             // Evaluasi Kriteria 1: Matematika (Sum)
@@ -339,12 +370,12 @@
 
             const isMathCorrect = sum === target;
             
-            // Evaluasi Kriteria 2: Sisi saling menempel (Connected Cluster/Order Independent)
+            // Evaluasi Kriteria 2: Sisi saling menempel
             let isPathCorrect = true;
             let pathErrorDetail = "Semua huruf saling menempel membentuk 1 kesatuan.";
             
             if (state.path.length > 1) {
-                // Algoritma Breadth-First Search (BFS) untuk mengecek konektivitas kelompok
+                // Algoritma BFS untuk mengecek apakah semua pilihan adalah 1 cluster
                 const visited = new Set();
                 const queue = [state.path[0]];
                 visited.add(state.path[0]);
@@ -354,7 +385,6 @@
                     const neighbors = ADJACENCY[currentIdx];
                     
                     neighbors.forEach(neighborIdx => {
-                        // Jika tetangga termasuk dalam huruf yang dipilih dan belum dikunjungi
                         if (state.path.includes(neighborIdx) && !visited.has(neighborIdx)) {
                             visited.add(neighborIdx);
                             queue.push(neighborIdx);
@@ -362,7 +392,6 @@
                     });
                 }
                 
-                // Jika jumlah yang terkoneksi sama dengan jumlah huruf yang dipilih, berarti menempel semua
                 if (visited.size === state.path.length) {
                     isPathCorrect = true;
                 } else {
@@ -376,7 +405,7 @@
                 pathErrorDetail = "Belum ada huruf yang dipilih.";
             }
 
-            // Tampilkan Hasil ke UI (Pop-Up Modal)
+            // Tampilkan Hasil ke UI
             const modalResult = document.getElementById('modal-result');
             const modalContent = document.getElementById('modal-content');
             const resultTitle = document.getElementById('result-title');
@@ -412,7 +441,6 @@
                 resultTitle.className = "text-center font-bold text-2xl mb-5 text-red-400";
             }
 
-            // Tampilkan modal beserta efek pop-up
             modalResult.classList.remove('hidden');
             setTimeout(() => {
                 modalContent.classList.remove('scale-95', 'opacity-0');
@@ -427,14 +455,16 @@
             renderPlayers();
         };
 
-        // Round Buttons
+        // Round Buttons - Mendukung format teks "2A"
         document.querySelectorAll('.round-btn').forEach(btn => {
             btn.onclick = (e) => {
                 document.querySelectorAll('.round-btn').forEach(b => {
                     b.className = "round-btn flex-1 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded text-sm font-bold shadow transition-colors";
                 });
                 e.target.className = "round-btn flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors";
-                state.round = parseInt(e.target.dataset.round);
+                
+                // Gunakan String langsung agar bisa menampung "2A"
+                state.round = e.target.dataset.round;
                 hideResult();
             };
         });
@@ -477,6 +507,7 @@
                     const data = JSON.parse(ev.target.result);
                     let isSuccess = false;
 
+                    // Menggunakan Object.assign/update agar key 2A (jika ada) bisa dipasangkan
                     if (data.PRESETS) {
                         PRESETS = data.PRESETS;
                         isSuccess = true;
@@ -487,19 +518,19 @@
                     }
                     
                     if (isSuccess) {
-                        alert('✅ File JSON berhasil diimport! Variabel sistem telah diperbarui.');
+                        showToast('File JSON berhasil diimport! Variabel sistem telah diperbarui.', 'success');
                         hideResult();
                         state.path = []; // Kosongkan papan setelah import agar sinkron
                         updatePathUI();
                     } else {
-                        alert('⚠️ JSON tidak valid. Pastikan ada key "PRESETS" atau "ADJACENCY".');
+                        showToast('JSON tidak valid. Pastikan ada key "PRESETS" atau "ADJACENCY".', 'error');
                     }
                 } catch (err) {
-                    alert('❌ Gagal mengurai file JSON!');
+                    showToast('Gagal mengurai file JSON!', 'error');
                 }
             };
             reader.readAsText(file);
-            e.target.value = ''; // Reset input
+            e.target.value = ''; // Reset input agar bisa import file yg sama ulang
         });
 
         // --- 6. INITIAL RUN ---
