@@ -205,6 +205,7 @@
                     <div class="flex gap-1.5">
                         <button id="btn-dice-1" class="flex-1 py-1.5 bg-indigo-600 text-white rounded text-xs font-bold shadow transition-colors">1</button>
                         <button id="btn-dice-2" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors">2</button>
+                        <button id="btn-dice-2a" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors">2A</button>
                     </div>
                 </div>
                 
@@ -322,6 +323,7 @@
         let allTextures = [[], []];
         let sharedGeometry, sharedEdgesGeometry, sharedEdgesMaterial;
         
+        let currentRound = '1';
         let diceCount = 1; 
         let activeEditDie = 0; 
         
@@ -341,8 +343,9 @@
 
         // Matriks struktur memori permainan
         const roundPresets = {
-            1: [R1_I1, EMPTY_20],
-            2: [R2_I1, R2_I2]
+            '1': [R1_I1, EMPTY_20],
+            '2': [R2_I1, R2_I2],
+            '2a': [R1_I1, R2_I2]
         };
 
         // Fungsi LCG (Linear Congruential Generator) untuk Seed Random yang Konsisten
@@ -357,7 +360,7 @@
         let allFaceData = Array.from({length: 2}, (_, d) => 
             Array.from({length: 20}, (_, i) => ({ 
                 label: String.fromCharCode(65 + i),
-                value: roundPresets[1][d][i], 
+                value: roundPresets['1'][d][i], 
                 color: memoryCorePalette[i].bg, // Sementara
                 textColor: '#ffffff' 
             }))
@@ -860,18 +863,21 @@
                 }
             });
 
-            const setDiceCount = (count, loadPreset = true) => {
-                diceCount = count;
-                [1, 2].forEach(num => {
-                    const btn = document.getElementById(`btn-dice-${num}`);
-                    if (num === count) btn.className = "flex-1 py-1.5 bg-indigo-600 text-white rounded text-sm font-bold shadow transition-colors";
-                    else btn.className = "flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm font-bold shadow transition-colors";
+            const setRound = (roundId, loadPreset = true) => {
+                currentRound = roundId;
+                diceCount = (roundId === '1') ? 1 : 2;
+
+                ['1', '2', '2a'].forEach(id => {
+                    const btn = document.getElementById(`btn-dice-${id}`);
+                    if (!btn) return;
+                    if (id === roundId) btn.className = "flex-1 py-1.5 bg-indigo-600 text-white rounded text-xs font-bold shadow transition-colors";
+                    else btn.className = "flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-xs font-bold shadow transition-colors";
                 });
 
                 if (loadPreset) {
                     for (let d = 0; d < 2; d++) {
                         for (let i = 0; i < 20; i++) {
-                            allFaceData[d][i].value = roundPresets[count][d][i];
+                            allFaceData[d][i].value = roundPresets[roundId][d][i];
                         }
                     }
                     for (let i = 0; i < 20; i++) {
@@ -884,8 +890,9 @@
                 }
                 updateDiceDisplay();
             };
-            document.getElementById('btn-dice-1').addEventListener('click', () => setDiceCount(1));
-            document.getElementById('btn-dice-2').addEventListener('click', () => setDiceCount(2));
+            document.getElementById('btn-dice-1').addEventListener('click', () => setRound('1'));
+            document.getElementById('btn-dice-2').addEventListener('click', () => setRound('2'));
+            document.getElementById('btn-dice-2a').addEventListener('click', () => setRound('2a'));
 
             const setActiveEditDie = (index) => {
                 activeEditDie = index;
@@ -1070,7 +1077,7 @@
                 const name = inputSaveName.value.trim();
                 if (!name) return showStatus("⚠️ Masukkan nama!", "text-amber-400");
                 const saves = getSaves();
-                saves[name] = { allFaces: allFaceData, indexColor: globalIndexColor, showIndex, showValue, showMesh, diceCount };
+                saves[name] = { allFaces: allFaceData, indexColor: globalIndexColor, showIndex, showValue, showMesh, currentRound };
                 localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
                 inputSaveName.value = ''; renderSaveList();
                 showStatus(`✅ "${name}" disimpan!`, "text-emerald-400");
@@ -1092,7 +1099,8 @@
                     showMesh = sd.showMesh !== false; 
                     document.getElementById('toggle-mesh').checked = showMesh;
 
-                    if (sd.diceCount) setDiceCount(sd.diceCount, false); 
+                    if (sd.currentRound) setRound(sd.currentRound, false); 
+                    else if (sd.diceCount) setRound(sd.diceCount.toString(), false); // Fallback old saves
                     
                     if (sd.allFaces) allFaceData = JSON.parse(JSON.stringify(sd.allFaces));
                     setActiveEditDie(0);
@@ -1151,8 +1159,9 @@
                 text += "\n";
 
                 text += "3. PEMETAAN ANGKA PER RONDE\n";
-                for(let r=1; r<=2; r++) {
-                    text += `--- RONDE ${r} ---\n`;
+                const roundsList = ['1', '2', '2a'];
+                for(let r of roundsList) {
+                    text += `--- RONDE ${r.toUpperCase()} ---\n`;
                     for(let d=0; d<2; d++) {
                         let isEmpty = roundPresets[r][d].every(v => v === "");
                         if(!isEmpty) {
@@ -1212,8 +1221,9 @@
                     });
                 }
 
-                for(let r = 1; r <= 2; r++) {
-                    let roundObj = { nomor_ronde: r, icosahedrons: [] };
+                const roundsList = ['1', '2', '2a'];
+                for(let r of roundsList) {
+                    let roundObj = { nomor_ronde: r.toUpperCase(), icosahedrons: [] };
                     for(let d = 0; d < 2; d++) {
                         let isEmpty = roundPresets[r][d].every(v => v === "");
                         if(!isEmpty) {
