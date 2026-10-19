@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Soal & Materi Matematika</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles untuk transisi halus */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hide {
+            display: none !important;
+        }
+        
+        /* Background pattern yang elegan */
+        body {
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 font-sans antialiased flex flex-col items-center py-10 px-4">
+
+    <main class="w-full max-w-md mx-auto relative bg-white/80 backdrop-blur-md shadow-xl rounded-3xl p-6 sm:p-8 min-h-[500px]">
+        
+        <!-- Profile / Header Section -->
+        <header class="flex flex-col items-center mb-8">
+            <div class="w-24 h-24 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-gray-900 text-center">Link Soal PEMADAM</h1>
+            <p id="header-desc" class="text-gray-500 text-sm mt-1 text-center">Pilih bagian mana yang akan kamu kerjakan</p>
+        </header>
+
+        <!-- View 1: Kategori Utama -->
+        <div id="category-view" class="fade-in flex flex-col gap-4">
+            <!-- Tombol kategori akan di-render di sini oleh JavaScript -->
+        </div>
+
+        <!-- View 2: Daftar Link / Judul -->
+        <div id="links-view" class="hide flex-col gap-4 fade-in">
+            <button onclick="showCategories()" class="flex items-center text-indigo-600 font-semibold mb-2 hover:text-indigo-800 transition-colors w-max bg-indigo-50 px-4 py-2 rounded-full text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Kembali ke Menu Awal
+            </button>
+            <h2 id="current-category-title" class="text-lg font-bold text-gray-800 mb-2 px-1">Judul Kategori</h2>
+            
+            <div id="links-container" class="flex flex-col gap-3">
+                <!-- Tombol link akan di-render di sini -->
+            </div>
+        </div>
+
+        <!-- Pesan Alert Kustom (Jika link bernilai #N/A) -->
+        <div id="custom-alert" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 fade-in">
+            <div class="bg-white rounded-2xl p-6 w-11/12 max-w-sm text-center shadow-2xl">
+                <div class="text-yellow-500 mb-4 flex justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Tautan Belum Tersedia</h3>
+                <p class="text-gray-600 text-sm mb-6">Maaf, tautan untuk materi ini belum tersedia atau sedang dalam perbaikan (#N/A).</p>
+                <button onclick="closeAlert()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                    Mengerti
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-8 text-center text-sm text-gray-500">
+        &copy; 2026 Tes PEMADAM Ruangguru
+    </footer>
+
+    <script>
+        // Data terstruktur dari informasi yang diberikan
+        const data = {
+            "A, E": [
+                { title: "Penjumlahan-Pengurangan bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-bilangan-bulat-3" },
+                { title: "Perkalian bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/perkalian-bilangan-bulat-3" },
+                { title: "Pembagian bilangan bulat 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-bilangan-bulat-2" },
+                { title: "Menuliskan faktor-faktor positif", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/menuliskan-faktor-faktor-positif" },
+                { title: "Menuliskan faktorisasi prima 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/menuliskan-faktorisasi-prima-2" }
+            ],
+            "B, C, D": [
+                { title: "Pembagian Pecahan Bentuk Desimal 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-pecahan-bentuk-desimal-2" },
+                { title: "Menyederhanakan Pecahan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-pecahan-3" },
+                { title: "Penjumlahan-Pengurangan Pecahan Bentuk Desimal 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-pecahan-bentuk-desimal-3" },
+                { title: "Penjumlahan-Pengurangan Pecahan 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-pecahan-3" },
+                { title: "Perkalian Pecahan 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/perkalian-pecahan-3" },
+                { title: "Pembagian Pecahan 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-pecahan-2" },
+                { title: "Nilai Tempat pada Desimal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/nilai-tempat-pada-desimal" },
+                { title: "Mengubah ke Bentuk Desimal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/mengubah-ke-bentuk-desimal" },
+                { title: "Mengubah Bentuk Desimal ke Pecahan Biasa", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/mengubah-bentuk-desimal-ke-pecahan-biasa" }
+            ],
+            "F": [
+                { title: "Penyelesaian Persamaan Satu Langkah 7", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penyelesaian-persamaan-satu-langkah-7" },
+                { title: "Soal Cerita: Penyelesaian Persamaan Satu Langkah 5", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-penyelesaian-persamaan-satu-langkah-5" },
+                { title: "Soal Cerita: Penyelesaian Persamaan Dua Langkah 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-penyelesaian-persamaan-dua-langkah-3" },
+                { title: "Penyelesaian Persamaan Lebih dari Dua Langkah 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penyelesaian-persamaan-lebih-dari-dua-langkah-2" }
+            ],
+            "G": [
+                { title: "Soal Cerita: Perbandingan Senilai 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-perbandingan-senilai-2" },
+                { title: "Soal Cerita Kesebangunan 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita-kesebangunan-2" },
+                { title: "Persentase 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/persentase-3" },
+                { title: "Harga Jual 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/harga-jual-3" },
+                { title: "Bunga Tunggal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bunga-tunggal" },
+                { title: "Bunga Majemuk", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bunga-majemuk" }
+            ],
+            "H": [
+                { title: "Nilai bentuk verbal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/nilai-bentuk-verbal" },
+                { title: "Bentuk aljabar ke bentuk verbal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bentuk-aljabar-ke-bentuk-verbal" },
+                { title: "Urutan Operasi Bilangan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/urutan-operasi-bilangan-3" },
+                { title: "Substitusi Variabel 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/substitusi-variabel-3" }
+            ],
+            "I": [
+                { title: "FPB 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/fpb-2" },
+                { title: "KPK 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/kpk-2" },
+                { title: "Keterbagian 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/keterbagian-2" },
+                { title: "Menyederhanakan Bentuk Aljabar 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-bentuk-aljabar-3" },
+                { title: "Menyederhanakan Polinomial 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-polinomial-3" }
+            ],
+            "J, K": [
+                { title: "Faktorisasi Prima Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/faktorisasi-prima-bentuk-aljabar-2" },
+                { title: "FPB Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/fpb-bentuk-aljabar-2" },
+                { title: "KPK Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/kpk-bentuk-aljabar-2" },
+                { title: "Sifat Distributif pada Polinomial 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/sifat-distributif-pada-polinomial-3" }
+            ],
+            "L": [
+                { title: "Bentuk Akar 1", url: "#N/A" },
+                { title: "Bentuk Akar 3", url: "#N/A" },
+                { title: "Bentuk Akar 5", url: "#N/A" }
+            ],
+            "M": [
+                { title: "Sifat-Sifat Eksponen 5", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/sifat-sifat-eksponen-5" },
+                { title: "Bilangan Bentuk Baku 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bilangan-bentuk-baku-3" },
+                { title: "Operasi pada Bentuk Baku (Notasi Ilmiah)", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/operasi-pada-bentuk-baku-notasi-ilmiah" }
+            ]
+        };
+
+        
+        // Element References
+        const categoryView = document.getElementById('category-view');
+        const linksView = document.getElementById('links-view');
+        const linksContainer = document.getElementById('links-container');
+        const categoryTitle = document.getElementById('current-category-title');
+        const customAlert = document.getElementById('custom-alert');
+        const headerDesc = document.getElementById('header-desc');
+
+        // Fungsi inisialisasi: Membuat menu awal (Kategori)
+        function initCategories() {
+            const categories = Object.keys(data);
+            categories.forEach(category => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full bg-white border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-gray-800 font-bold py-4 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex justify-between items-center text-left';
+                btn.innerHTML = `
+                    <span>Bagian ${category}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                `;
+                btn.onclick = () => showLinks(category);
+                categoryView.appendChild(btn);
+            });
+        }
+
+        // Fungsi untuk navigasi kembali ke Menu Utama
+        function showCategories() {
+            linksView.classList.add('hide');
+            linksView.classList.remove('flex');
+            
+            categoryView.classList.remove('hide');
+            categoryView.classList.add('flex');
+            
+            headerDesc.textContent = "Pilih bagian mana yang akan kamu kerjakan";
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Fungsi untuk menampilkan daftar link setelah kategori diklik
+        function showLinks(category) {
+            categoryView.classList.add('hide');
+            categoryView.classList.remove('flex');
+            
+            linksView.classList.remove('hide');
+            linksView.classList.add('flex');
+            
+            headerDesc.textContent = "Pilih bab yang akan kamu selesaikan";
+            categoryTitle.textContent = `Materi Bagian ${category}`;
+            linksContainer.innerHTML = ''; // Bersihkan container sebelumnya
+
+            const items = data[category];
+            
+            items.forEach((item, index) => {
+                const isNa = item.url === '#N/A';
+                const linkWrapper = document.createElement('a');
+                
+                // Atur aksi berdasarkan status ketersediaan link
+                if (isNa) {
+                    linkWrapper.href = "javascript:void(0)";
+                    linkWrapper.onclick = (e) => {
+                        e.preventDefault();
+                        showCustomAlert();
+                    };
+                } else {
+                    linkWrapper.href = item.url;
+                    linkWrapper.target = "_blank"; // Buka di tab baru
+                    linkWrapper.rel = "noopener noreferrer";
+                }
+
+                // Styling berbeda jika link tidak tersedia
+                const bgClass = isNa ? 'bg-gray-100 border-gray-200 cursor-not-allowed text-gray-400' : 'bg-white border-indigo-100 hover:border-indigo-400 hover:bg-indigo-600 hover:text-white text-gray-800 shadow-sm hover:shadow-lg cursor-pointer group';
+                const iconClass = isNa ? 'text-gray-300' : 'text-indigo-400 group-hover:text-white';
+                const numberBgClass = isNa ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-indigo-600 group-hover:bg-white/20 group-hover:text-white';
+                
+                linkWrapper.className = `w-full border-2 py-3 px-4 sm:px-5 rounded-2xl transition-all duration-300 flex justify-between items-center text-left ${bgClass}`;
+                
+                linkWrapper.innerHTML = `
+                    <div class="flex items-center gap-3 sm:gap-4 pr-2">
+                        <span class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${numberBgClass}">
+                            ${index + 1}
+                        </span>
+                        <span class="font-medium leading-tight">${item.title}</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 ${iconClass} transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isNa ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'}" />
+                    </svg>
+                `;
+                
+                linksContainer.appendChild(linkWrapper);
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Menampilkan pesan jika link adalah #N/A
+        function showCustomAlert() {
+            customAlert.classList.remove('hidden');
+            customAlert.classList.add('flex');
+        }
+
+        function closeAlert() {
+            customAlert.classList.add('hidden');
+            customAlert.classList.remove('flex');
+        }
+
+        // Jalankan saat pertama kali dimuat
+        window.onload = () => {
+            initCategories();
+        };
+    </script>
+</body>
+</html>
