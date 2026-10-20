@@ -28,35 +28,66 @@
 </head>
 <body class="min-h-screen text-gray-800 font-sans antialiased flex flex-col items-center py-10 px-4">
 
-    <main class="w-full max-w-md mx-auto relative bg-white/80 backdrop-blur-md shadow-xl rounded-3xl p-6 sm:p-8 min-h-[500px]">
+    <main class="w-full max-w-md mx-auto relative bg-white/80 backdrop-blur-md shadow-xl rounded-3xl p-6 sm:p-8 min-h-[500px] flex flex-col">
         
         <!-- Profile / Header Section -->
-        <header class="flex flex-col items-center mb-8">
+        <header class="flex flex-col items-center mb-6">
             <div class="w-24 h-24 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
             </div>
             <h1 class="text-2xl font-extrabold text-gray-900 text-center">Link Soal PEMADAM</h1>
-            <p id="header-desc" class="text-gray-500 text-sm mt-1 text-center">Pilih bagian mana yang akan kamu kerjakan</p>
+            <p id="header-desc" class="text-gray-500 text-sm mt-1 text-center">Silakan masuk dengan kode aksesmu</p>
         </header>
 
+        <!-- View 0: Halaman Login -->
+        <div id="login-view" class="fade-in flex flex-col gap-4 flex-grow justify-center pb-8">
+            <div class="bg-indigo-50 border-2 border-indigo-100 p-5 rounded-2xl">
+                <h2 class="text-lg font-bold text-gray-800 text-center mb-3">Masukkan Kode Unik</h2>
+                <input type="text" id="user-code" placeholder="Contoh: 0328BNBALD" class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-center uppercase font-semibold text-gray-700 tracking-wider focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-all mb-3">
+                <button onclick="handleLogin()" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg">
+                    Mulai Kerjakan
+                </button>
+                <p id="login-error" class="text-red-500 text-sm text-center font-medium mt-3 hide"></p>
+            </div>
+        </div>
+
         <!-- View 1: Kategori Utama -->
-        <div id="category-view" class="fade-in flex flex-col gap-4">
-            <!-- Tombol kategori akan di-render di sini oleh JavaScript -->
+        <div id="category-view" class="hide flex-col gap-4 flex-grow">
+            <!-- Banner Nama Siswa & Tombol Ganti Kode -->
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex justify-between items-center mb-2 shadow-sm fade-in">
+                <div>
+                    <p class="text-xs text-blue-600 font-semibold uppercase tracking-wider">Selamat Datang,</p>
+                    <h2 id="student-name" class="text-lg font-extrabold text-blue-900 truncate max-w-[180px] sm:max-w-[220px]">Nama Siswa</h2>
+                </div>
+                <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-colors shadow-sm flex items-center gap-1 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Ganti Kode
+                </button>
+            </div>
+            
+            <div id="category-container" class="flex flex-col gap-4">
+                <!-- Tombol kategori dinamis akan di-render di sini -->
+            </div>
         </div>
 
         <!-- View 2: Daftar Link / Judul -->
-        <div id="links-view" class="hide flex-col gap-4 fade-in">
+        <div id="links-view" class="hide flex-col gap-4 fade-in flex-grow">
             <button onclick="showCategories()" class="flex items-center text-indigo-600 font-semibold mb-2 hover:text-indigo-800 transition-colors w-max bg-indigo-50 px-4 py-2 rounded-full text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Kembali ke Menu Awal
+                Kembali ke Menu Bab
             </button>
-            <h2 id="current-category-title" class="text-lg font-bold text-gray-800 mb-2 px-1">Judul Kategori</h2>
+            <div class="flex justify-between items-end mb-2 px-1">
+                <h2 id="current-category-title" class="text-lg font-bold text-gray-800">Judul Kategori</h2>
+                <span class="text-xs text-gray-500 font-medium bg-gray-200 px-2 py-1 rounded-md">Wajib</span>
+            </div>
             
-            <div id="links-container" class="flex flex-col gap-3">
+            <div id="links-container" class="flex flex-col gap-3 pb-6">
                 <!-- Tombol link akan di-render di sini -->
             </div>
         </div>
@@ -79,12 +110,12 @@
 
     </main>
 
-    <footer class="mt-8 text-center text-sm text-gray-500">
+    <footer class="mt-8 text-center text-sm text-gray-500 font-medium">
         &copy; 2026 Tes PEMADAM Ruangguru
     </footer>
 
     <script>
-        // Data terstruktur dari informasi yang diberikan
+        // Data master materi
         const data = {
             "A, E": [
                 { title: "Penjumlahan-Pengurangan bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-bilangan-bulat-3" },
@@ -149,34 +180,164 @@
             ]
         };
 
-        
+        // Variable State
+        let userAllowedCategories = [];
+        let clickedLinks = [];
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1W6anTCgsXRdvcNC1TUadkHnDHJ0yNpsEXeVQOrSuaSs/export?format=csv&gid=0";
+
         // Element References
+        const loginView = document.getElementById('login-view');
         const categoryView = document.getElementById('category-view');
+        const categoryContainer = document.getElementById('category-container');
         const linksView = document.getElementById('links-view');
         const linksContainer = document.getElementById('links-container');
         const categoryTitle = document.getElementById('current-category-title');
         const customAlert = document.getElementById('custom-alert');
         const headerDesc = document.getElementById('header-desc');
+        const studentNameDisplay = document.getElementById('student-name');
 
-        // Fungsi inisialisasi: Membuat menu awal (Kategori)
+        async function handleLogin() {
+            const codeInput = document.getElementById('user-code').value.trim().toUpperCase();
+            const errorMsg = document.getElementById('login-error');
+            const loginBtn = document.getElementById('login-btn');
+            
+            if (!codeInput) {
+                errorMsg.textContent = "Mohon isi kode akses terlebih dahulu!";
+                errorMsg.classList.remove('hide');
+                return;
+            }
+
+            errorMsg.classList.add('hide');
+            loginBtn.textContent = "Memeriksa Kode...";
+            loginBtn.disabled = true;
+            loginBtn.classList.add('opacity-75', 'cursor-wait');
+
+            try {
+                // Mengambil data CSV dari Google Sheet
+                const response = await fetch(SHEET_URL);
+                if (!response.ok) throw new Error("Gagal terhubung ke server");
+                const csvText = await response.text();
+                
+                // Parsing sederhana untuk memisahkan koma tapi mengabaikan koma di dalam tanda kutip
+                const rows = csvText.split('\n').map(line => {
+                    const words = [];
+                    let currentWord = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') inQuotes = !inQuotes;
+                        else if (char === ',' && !inQuotes) {
+                            words.push(currentWord.trim());
+                            currentWord = '';
+                        } else currentWord += char;
+                    }
+                    words.push(currentWord.trim());
+                    return words;
+                });
+
+                // Cek baris yang cocok dengan kode di Kolom D (Index ke-3)
+                const userRow = rows.find(r => r[3] && r[3].toUpperCase() === codeInput);
+                
+                if (userRow) {
+                    // Masukkan Nama Siswa dari Kolom A (Index ke-0) ke UI
+                    studentNameDisplay.textContent = userRow[0] ? userRow[0] : "Siswa";
+
+                    // Berhasil Login: Atur local storage & Reset riwayat jika kode baru
+                    const savedCode = localStorage.getItem('pemadam_user_code');
+                    if (savedCode !== codeInput) {
+                        localStorage.setItem('pemadam_user_code', codeInput);
+                        localStorage.removeItem('pemadam_clicked_links');
+                        clickedLinks = [];
+                    } else {
+                        // Muat cache history link jika memakai kode yang sama
+                        clickedLinks = JSON.parse(localStorage.getItem('pemadam_clicked_links') || '[]');
+                    }
+
+                    // Mapping Kolom ke Kategori Bab
+                    // Disesuaikan dengan posisi kolom spreadsheet:
+                    // E(4)->A,E | F(5)->B,C,D | G(6)->F | H(7)->G | I(8)->H | J(9)->I | K(10)->J,K | L(11)->L | M(12)->M
+                    const colMap = { 
+                        "A, E": 4, "B, C, D": 5, "F": 6, "G": 7, 
+                        "H": 8, "I": 9, "J, K": 10, "L": 11, "M": 12 
+                    };
+                    
+                    userAllowedCategories = [];
+                    
+                    // Seleksi Hanya Bagian yang Bernilai "Wajib" (Abaikan "Tidak Wajib")
+                    for (const [cat, idx] of Object.entries(colMap)) {
+                        const cellValue = userRow[idx] ? userRow[idx].toLowerCase() : '';
+                        if (cellValue.includes('wajib') && !cellValue.includes('tidak')) {
+                            userAllowedCategories.push(cat);
+                        }
+                    }
+
+                    if (userAllowedCategories.length === 0) {
+                        errorMsg.textContent = "Tidak ada bab yang ditugaskan (Wajib) untuk kode ini.";
+                        errorMsg.classList.remove('hide');
+                    } else {
+                        // Persiapkan tampilan kategori
+                        initCategories(); 
+                        showCategories();
+                    }
+
+                } else {
+                    errorMsg.textContent = "Kode tidak ditemukan! Periksa kembali kodemu.";
+                    errorMsg.classList.remove('hide');
+                }
+            } catch (error) {
+                console.error(error);
+                errorMsg.textContent = "Gagal memuat data. Pastikan koneksi internet lancar.";
+                errorMsg.classList.remove('hide');
+            }
+            
+            // Kembalikan tombol ke kondisi semula
+            loginBtn.textContent = "Mulai Kerjakan";
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('opacity-75', 'cursor-wait');
+        }
+
+        function handleLogout() {
+            // Bersihkan inputan
+            document.getElementById('user-code').value = '';
+            
+            // Sembunyikan view materi, tampilkan login
+            categoryView.classList.add('hide');
+            categoryView.classList.remove('flex');
+            linksView.classList.add('hide');
+            linksView.classList.remove('flex');
+            
+            loginView.classList.remove('hide');
+            loginView.classList.add('flex');
+            
+            headerDesc.textContent = "Silakan masuk dengan kode aksesmu";
+        }
+
         function initCategories() {
-            const categories = Object.keys(data);
-            categories.forEach(category => {
+            categoryContainer.innerHTML = ''; // Bersihkan kontainer menu tombol
+            
+            userAllowedCategories.forEach(category => {
+                if (!data[category]) return; // Proteksi jika data master tak ada
+                
                 const btn = document.createElement('button');
-                btn.className = 'w-full bg-white border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-gray-800 font-bold py-4 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex justify-between items-center text-left';
+                btn.className = 'w-full bg-white border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-gray-800 font-bold py-4 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex justify-between items-center text-left group';
                 btn.innerHTML = `
-                    <span>Bagian ${category}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 bg-indigo-500 rounded-full group-hover:scale-150 transition-transform"></div>
+                        <span class="text-lg">Bagian ${category}</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
                 `;
                 btn.onclick = () => showLinks(category);
-                categoryView.appendChild(btn);
+                categoryContainer.appendChild(btn);
             });
         }
 
-        // Fungsi untuk navigasi kembali ke Menu Utama
         function showCategories() {
+            loginView.classList.add('hide');
+            loginView.classList.remove('flex');
+            
             linksView.classList.add('hide');
             linksView.classList.remove('flex');
             
@@ -184,11 +345,9 @@
             categoryView.classList.add('flex');
             
             headerDesc.textContent = "Pilih bagian mana yang akan kamu kerjakan";
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Fungsi untuk menampilkan daftar link setelah kategori diklik
         function showLinks(category) {
             categoryView.classList.add('hide');
             categoryView.classList.remove('flex');
@@ -198,15 +357,15 @@
             
             headerDesc.textContent = "Pilih bab yang akan kamu selesaikan";
             categoryTitle.textContent = `Materi Bagian ${category}`;
-            linksContainer.innerHTML = ''; // Bersihkan container sebelumnya
+            linksContainer.innerHTML = ''; 
 
             const items = data[category];
             
             items.forEach((item, index) => {
                 const isNa = item.url === '#N/A';
+                const isClicked = clickedLinks.includes(item.url) && !isNa;
                 const linkWrapper = document.createElement('a');
                 
-                // Atur aksi berdasarkan status ketersediaan link
                 if (isNa) {
                     linkWrapper.href = "javascript:void(0)";
                     linkWrapper.onclick = (e) => {
@@ -215,14 +374,44 @@
                     };
                 } else {
                     linkWrapper.href = item.url;
-                    linkWrapper.target = "_blank"; // Buka di tab baru
+                    linkWrapper.target = "_blank"; 
                     linkWrapper.rel = "noopener noreferrer";
+                    
+                    // Simpan ke Cache jika diklik
+                    linkWrapper.onclick = (e) => {
+                        if (!clickedLinks.includes(item.url)) {
+                            clickedLinks.push(item.url);
+                            localStorage.setItem('pemadam_clicked_links', JSON.stringify(clickedLinks));
+                            
+                            // Beri waktu sejenak sebelum re-render warnanya agar transisi terasa
+                            setTimeout(() => {
+                                showLinks(category); 
+                            }, 500);
+                        }
+                    };
                 }
 
-                // Styling berbeda jika link tidak tersedia
-                const bgClass = isNa ? 'bg-gray-100 border-gray-200 cursor-not-allowed text-gray-400' : 'bg-white border-indigo-100 hover:border-indigo-400 hover:bg-indigo-600 hover:text-white text-gray-800 shadow-sm hover:shadow-lg cursor-pointer group';
-                const iconClass = isNa ? 'text-gray-300' : 'text-indigo-400 group-hover:text-white';
-                const numberBgClass = isNa ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-indigo-600 group-hover:bg-white/20 group-hover:text-white';
+                // Pengaturan Styling Dinamis (Default vs Diklik/Visited vs #N/A)
+                let bgClass, iconClass, numberBgClass, textClass;
+                
+                if (isNa) {
+                    bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed text-gray-400';
+                    iconClass = 'text-gray-300';
+                    numberBgClass = 'bg-gray-200 text-gray-400';
+                    textClass = 'text-gray-400';
+                } else if (isClicked) {
+                    // Tema Gelap jika sudah pernah diklik
+                    bgClass = 'bg-gray-800 border-gray-700 hover:bg-gray-900 shadow-sm hover:shadow-lg cursor-pointer group';
+                    iconClass = 'text-gray-400 group-hover:text-white';
+                    numberBgClass = 'bg-gray-700 text-gray-300 group-hover:bg-gray-600 group-hover:text-white';
+                    textClass = 'text-gray-100';
+                } else {
+                    // Tema Terang jika belum diklik
+                    bgClass = 'bg-white border-indigo-100 hover:border-indigo-400 hover:bg-indigo-600 shadow-sm hover:shadow-lg cursor-pointer group';
+                    iconClass = 'text-indigo-400 group-hover:text-white';
+                    numberBgClass = 'bg-indigo-100 text-indigo-600 group-hover:bg-white/20 group-hover:text-white';
+                    textClass = 'text-gray-800 group-hover:text-white';
+                }
                 
                 linkWrapper.className = `w-full border-2 py-3 px-4 sm:px-5 rounded-2xl transition-all duration-300 flex justify-between items-center text-left ${bgClass}`;
                 
@@ -231,20 +420,28 @@
                         <span class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${numberBgClass}">
                             ${index + 1}
                         </span>
-                        <span class="font-medium leading-tight">${item.title}</span>
+                        <span class="font-medium leading-tight ${textClass} transition-colors">${item.title}</span>
                     </div>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 ${iconClass} transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isNa ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'}" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isNa ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : (isClicked ? 'M5 13l4 4L19 7' : 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14')}" />
                     </svg>
                 `;
                 
+                // Tambahkan label "Selesai" kecil jika sudah diklik
+                if (isClicked) {
+                    const statusBadge = document.createElement('span');
+                    statusBadge.className = "absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm";
+                    statusBadge.textContent = "DILIHAT";
+                    linkWrapper.style.position = 'relative';
+                    linkWrapper.appendChild(statusBadge);
+                }
+
                 linksContainer.appendChild(linkWrapper);
             });
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Menampilkan pesan jika link adalah #N/A
         function showCustomAlert() {
             customAlert.classList.remove('hidden');
             customAlert.classList.add('flex');
@@ -255,9 +452,19 @@
             customAlert.classList.remove('flex');
         }
 
-        // Jalankan saat pertama kali dimuat
         window.onload = () => {
-            initCategories();
+            // Cek apakah sebelumnya siswa sudah pernah masuk di perangkat ini
+            const savedCode = localStorage.getItem('pemadam_user_code');
+            if (savedCode) {
+                document.getElementById('user-code').value = savedCode;
+            }
+            
+            // Allow enter key trigger
+            document.getElementById('user-code').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
         };
     </script>
 </body>
