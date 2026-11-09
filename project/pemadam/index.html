@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Soal & Materi Matematika</title> 
+    <title>Bank Soal & Materi Matematika</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles untuk transisi halus */
@@ -132,75 +132,34 @@
     </footer>
 
     <script>
-        // Data master materi
+        // Data master materi terbaru (SMA)
         const data = {
             "A, E": [
-                { title: "Penjumlahan-Pengurangan bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-bilangan-bulat-3" },
-                { title: "Perkalian bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/perkalian-bilangan-bulat-3" },
-                { title: "Pembagian bilangan bulat 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-bilangan-bulat-2" },
-                { title: "Menuliskan faktor-faktor positif", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/menuliskan-faktor-faktor-positif" },
-                { title: "Menuliskan faktorisasi prima 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/menuliskan-faktorisasi-prima-2" }
+                { title: "Penjumlahan-Pengurangan bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penjumlahan-pengurangan-bilangan-bulat-3" },
+                { title: "Perkalian bilangan bulat 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/perkalian-bilangan-bulat-3" },
+                { title: "Pembagian bilangan bulat 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/pembagian-bilangan-bulat-2" },
+                { title: "Menuliskan faktor-faktor positif", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menuliskan-faktor-faktor-positif" },
+                { title: "Menuliskan faktorisasi prima 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menuliskan-faktorisasi-prima-2" }
             ],
             "B, C, D": [
-                { title: "Pembagian Pecahan Bentuk Desimal 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-pecahan-bentuk-desimal-2" },
-                { title: "Menyederhanakan Pecahan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-pecahan-3" },
-                { title: "Penjumlahan-Pengurangan Pecahan Bentuk Desimal 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-pecahan-bentuk-desimal-3" },
-                { title: "Penjumlahan-Pengurangan Pecahan 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/penjumlahan-pengurangan-pecahan-3" },
-                { title: "Perkalian Pecahan 3", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/perkalian-pecahan-3" },
-                { title: "Pembagian Pecahan 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/pembagian-pecahan-2" },
-                { title: "Nilai Tempat pada Desimal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/nilai-tempat-pada-desimal" },
-                { title: "Mengubah ke Bentuk Desimal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/mengubah-ke-bentuk-desimal" },
-                { title: "Mengubah Bentuk Desimal ke Pecahan Biasa", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/mengubah-bentuk-desimal-ke-pecahan-biasa" }
-            ],
-            "F": [
-                { title: "Penyelesaian Persamaan Satu Langkah 7", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penyelesaian-persamaan-satu-langkah-7" },
-                { title: "Soal Cerita: Penyelesaian Persamaan Satu Langkah 5", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-penyelesaian-persamaan-satu-langkah-5" },
-                { title: "Soal Cerita: Penyelesaian Persamaan Dua Langkah 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-penyelesaian-persamaan-dua-langkah-3" },
-                { title: "Penyelesaian Persamaan Lebih dari Dua Langkah 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penyelesaian-persamaan-lebih-dari-dua-langkah-2" }
-            ],
-            "G": [
-                { title: "Soal Cerita: Perbandingan Senilai 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita:-perbandingan-senilai-2" },
-                { title: "Soal Cerita Kesebangunan 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/soal-cerita-kesebangunan-2" },
-                { title: "Persentase 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/persentase-3" },
-                { title: "Harga Jual 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/harga-jual-3" },
-                { title: "Bunga Tunggal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bunga-tunggal" },
-                { title: "Bunga Majemuk", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bunga-majemuk" }
-            ],
-            "H": [
-                { title: "Nilai bentuk verbal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/nilai-bentuk-verbal" },
-                { title: "Bentuk aljabar ke bentuk verbal", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bentuk-aljabar-ke-bentuk-verbal" },
-                { title: "Urutan Operasi Bilangan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/urutan-operasi-bilangan-3" },
-                { title: "Substitusi Variabel 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/substitusi-variabel-3" }
+                { title: "Pembagian Pecahan Bentuk Desimal 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/pembagian-pecahan-bentuk-desimal-2" },
+                { title: "Penjumlahan-Pengurangan Pecahan Bentuk Desimal 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penjumlahan-pengurangan-pecahan-bentuk-desimal-3" },
+                { title: "Penjumlahan-Pengurangan Pecahan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/penjumlahan-pengurangan-pecahan-3" },
+                { title: "Perkalian Pecahan 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/perkalian-pecahan-3" },
+                { title: "Pembagian Pecahan 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/pembagian-pecahan-2" }
             ],
             "I": [
-                { title: "FPB 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/fpb-2" },
-                { title: "KPK 2", url: "https://app.ruangguru.com/banksoal/smp-kelas-9/matematika/kpk-2" },
-                { title: "Keterbagian 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/keterbagian-2" },
-                { title: "Menyederhanakan Bentuk Aljabar 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-bentuk-aljabar-3" },
-                { title: "Menyederhanakan Polinomial 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/menyederhanakan-polinomial-3" }
-            ],
-            "J, K": [
-                { title: "Faktorisasi Prima Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/faktorisasi-prima-bentuk-aljabar-2" },
-                { title: "FPB Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/fpb-bentuk-aljabar-2" },
-                { title: "KPK Bentuk Aljabar 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/kpk-bentuk-aljabar-2" },
-                { title: "Sifat Distributif pada Polinomial 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/sifat-distributif-pada-polinomial-3" }
-            ],
-            "L": [
-                { title: "Bentuk Akar 1", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bentuk-akar-1" },
-                { title: "Bentuk Akar 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bentuk-akar-3" },
-                { title: "Bentuk Akar 5", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bentuk-akar-5" }
-            ],
-            "M": [
-                { title: "Sifat-Sifat Eksponen 5", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/sifat-sifat-eksponen-5" },
-                { title: "Bilangan Bentuk Baku 3", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/bilangan-bentuk-baku-3" },
-                { title: "Operasi pada Bentuk Baku (Notasi Ilmiah)", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/operasi-pada-bentuk-baku-notasi-ilmiah" }
+                { title: "FPB 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/fpb-2" },
+                { title: "KPK 2", url: "https://app.ruangguru.com/banksoal/sma-kelas-12-ipa/matematika-wajib-dan-minat/kpk-2" }
             ]
         };
 
         // Variable State
         let userAllowedCategories = [];
         let clickedLinks = [];
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1W6anTCgsXRdvcNC1TUadkHnDHJ0yNpsEXeVQOrSuaSs/export?format=csv&gid=0";
+        
+        // Link Spreadsheet Baru (One Stop Branch View)
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1H52zar_jlhqGc83DiIFkQwsU4VRkOIib2hfPKQUyvOc/export?format=csv&gid=742264776";
 
         // Element References
         const loginView = document.getElementById('login-view');
@@ -236,7 +195,7 @@
                 const csvText = await response.text();
                 
                 // Parsing sederhana untuk memisahkan koma tapi mengabaikan koma di dalam tanda kutip
-                const rows = csvText.split('\n').map(line => {
+                let rows = csvText.split('\n').map(line => {
                     const words = [];
                     let currentWord = '';
                     let inQuotes = false;
@@ -251,6 +210,9 @@
                     words.push(currentWord.trim());
                     return words;
                 });
+
+                // Abaikan 3 baris pertama (mulai dari baris ke-4)
+                rows = rows.slice(3);
 
                 // Cek baris yang cocok dengan kode di Kolom D (Index ke-3)
                 const matchedRows = rows.filter(r => r[3] && r[3].toUpperCase() === codeInput);
@@ -320,24 +282,24 @@
             studentNameDisplay.textContent = userRow[0] ? userRow[0] : "Siswa";
 
             // Berhasil Login: Atur local storage & Reset riwayat jika kode atau NAMA baru
-            // Menggabungkan kode dan nama sebagai kunci identitas agar cache tidak bertabrakan jika kode sama
             const currentUserKey = codeInput + "_" + (userRow[0] || "Siswa");
             const savedKey = localStorage.getItem('pemadam_user_key');
             
             if (savedKey !== currentUserKey) {
                 localStorage.setItem('pemadam_user_key', currentUserKey);
-                localStorage.setItem('pemadam_user_code', codeInput); // Simpan kode untuk auto-fill di form awal
+                localStorage.setItem('pemadam_user_code', codeInput); // Simpan kode
                 localStorage.removeItem('pemadam_clicked_links');
                 clickedLinks = [];
             } else {
-                // Muat cache history link jika memakai kode dan nama (identitas) yang sama
                 clickedLinks = JSON.parse(localStorage.getItem('pemadam_clicked_links') || '[]');
             }
 
             // Mapping Kolom ke Kategori Bab
             const colMap = { 
-                "A, E": 4, "B, C, D": 5, "F": 6, "G": 7, 
-                "H": 8, "I": 9, "J, K": 10, "L": 11, "M": 12 
+                "A, E": 4,      // Kolom E (Index 4)
+                "B, C, D": 5,   // Kolom F (Index 5)
+                "I": 9,         // Kolom J (Index 9)
+                "M": 12         // Kolom M (Index 12) - Berjaga-jaga jika nanti diaktifkan
             };
             
             userAllowedCategories = [];
@@ -351,7 +313,7 @@
             }
 
             if (userAllowedCategories.length === 0) {
-                cancelNameSelection(); // Pastikan kembali ke view login jika gagal
+                cancelNameSelection(); 
                 errorMsg.textContent = "Tidak ada bab yang ditugaskan (Wajib) untuk kamu.";
                 errorMsg.classList.remove('hide');
             } else {
